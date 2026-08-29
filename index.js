@@ -49,15 +49,17 @@ client.once('ready', async () => {
                 await rulesChannel.bulkDelete(messages).catch(() => {});
             }
 
-            // Anexa o arquivo regras.png do seu projeto
+            // 1. Prepara o arquivo do banner
             const banner = new AttachmentBuilder('./regras.png');
 
+            // 2. Envia o banner sozinho primeiro (ficando no topo absoluto)
+            await rulesChannel.send({ files: [banner] });
+
+            // 3. Cria o Embed com as regras grandes e a linha lateral azul (.setColor)
             const embedRegras = new EmbedBuilder()
-                .setColor('#00bfff')
+                .setColor('#00bfff') // Linha azul lateral do embed
                 .setTitle('📜 SERVER RULES — HUSHPVP')
                 .setDescription('To maintain a fair, competitive and enjoyable environment, all players must follow the rules below strictly.')
-                // Insere a imagem logo no topo do embed (abaixo do título/descrição)
-                .setImage('attachment://regras.png')
                 .addFields(
                     { 
                         name: '🔇 ━━━━━━━━ CHAT MUTES ━━━━━━━━ 🔇', 
@@ -99,8 +101,9 @@ client.once('ready', async () => {
                 .setFooter({ text: 'HushPvP • Jogue limpo. Respeite os outros. Seja competitivo. ⚔️' })
                 .setTimestamp();
 
-            await rulesChannel.send({ embeds: [embedRegras], files: [banner] });
-            console.log('Painel de regras ampliado enviado com sucesso!');
+            // 4. Envia o embed logo abaixo da imagem, mantendo a lateral azul
+            await rulesChannel.send({ embeds: [embedRegras] });
+            console.log('Banner no topo e painel de regras enviados com sucesso!');
         }
     } catch (error) {
         console.error('Erro ao enviar as regras:', error);
