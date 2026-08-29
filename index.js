@@ -49,54 +49,43 @@ client.once('ready', async () => {
                 await rulesChannel.bulkDelete(messages).catch(() => {});
             }
 
-            // Prepara o arquivo regras.png para ser enviado direto pelo bot
+            // Anexa o arquivo regras.png direto para dentro do Embed
             const banner = new AttachmentBuilder('./regras.png');
 
-            // Envia a imagem do banner primeiro
-            await rulesChannel.send({ files: [banner] });
-
-            // Embed estruturado com categorias, tópicos e linhas
             const embedRegras = new EmbedBuilder()
                 .setColor('#00bfff')
                 .setTitle('📜 SERVER RULES')
-                .setDescription('To maintain a fair, competitive and enjoyable environment, all players must follow the rules below.\n\n' +
-                    '────────────────────────────────────────\n\n' +
-                    '🔇 **CHAT MUTES**\n' +
-                    '• Unauthorized links (except approved creators)\n' +
-                    '• Advertising servers, communities or services\n' +
-                    '• Selling items outside allowed channels\n' +
-                    '• Bypassing chat filters\n' +
-                    '• Toxic or disrespectful behavior\n' +
-                    '• Mild discrimination\n' +
-                    '• Inappropriate content\n' +
-                    '• Spam, flooding or repetitive messages\n\n' +
-                    '────────────────────────────────────────\n\n' +
-                    '⛔ **PERMANENT CHAT MUTES**\n' +
-                    '• Harassment, bullying, threats or intimidation\n' +
-                    '• Racist, hateful or discriminatory speech\n' +
-                    '• Encouraging suicide or self-harm\n' +
-                    '• Intentional provocation to create conflicts\n' +
-                    '• Sexual, NSFW or 18+ content\n\n' +
-                    '────────────────────────────────────────\n\n' +
-                    '👢 **KICKS**\n' +
-                    '• Interfering with staff or server systems\n' +
-                    '• Repeated false reports\n' +
-                    '• Intentionally avoiding combat\n' +
-                    '• Disruptive gameplay behavior\n' +
-                    '• Situations where staff consider a kick necessary\n\n' +
-                    '────────────────────────────────────────\n\n' +
-                    '🔨 **BANS E PUNIÇÕES GERAIS**\n' +
-                    '• Uso de hacks, cheats, autoclicker ou macros\n' +
-                    '• Exploração de bugs e falhas do servidor\n' +
-                    '• Falsificação de identidade de membros da equipe\n' +
-                    '• Golpes, fraudes e tentativas de roubo de contas\n' +
-                    '• Tentativa de burlar punições usando contas alternativas'
+                .setDescription('To maintain a fair, competitive and enjoyable environment, all players must follow the rules below.')
+                // Coloca a imagem colada no topo do embed usando attachment://
+                .setImage('attachment://regras.png')
+                .addFields(
+                    { 
+                        name: '🔇 CHAT MUTES', 
+                        value: '• Unauthorized links (except approved creators)\n• Advertising servers, communities or services\n• Selling items outside allowed channels\n• Bypassing chat filters\n• Toxic or disrespectful behavior\n• Mild discrimination\n• Inappropriate content\n• Spam, flooding or repetitive messages', 
+                        inline: false 
+                    },
+                    { 
+                        name: '⛔ PERMANENT CHAT MUTES', 
+                        value: '• Harassment, bullying, threats or intimidation\n• Racist, hateful or discriminatory speech\n• Encouraging suicide or self-harm\n• Intentional provocation to create conflicts\n• Sexual, NSFW or 18+ content', 
+                        inline: false 
+                    },
+                    { 
+                        name: '👢 KICKS', 
+                        value: '• Interfering with staff or server systems\n• Repeated false reports\n• Intentionally avoiding combat\n• Disruptive gameplay behavior\n• Situations where staff consider a kick necessary', 
+                        inline: false 
+                    },
+                    { 
+                        name: '🔨 BANS E PUNIÇÕES GERAIS', 
+                        value: '• Uso de hacks, cheats, autoclicker ou macros\n• Exploração de bugs e falhas do servidor\n• Falsificação de identidade de membros da equipe\n• Golpes, fraudes e tentativas de roubo de contas\n• Tentativa de burlar punições usando contas alternativas', 
+                        inline: false 
+                    }
                 )
                 .setFooter({ text: 'HushPvP • Jogue limpo. Respeite os outros. Seja competitivo. ⚔️' })
                 .setTimestamp();
 
-            await rulesChannel.send({ embeds: [embedRegras] });
-            console.log('Painel de regras e imagem enviados com sucesso!');
+            // Envia o embed junto com o arquivo de imagem anexado
+            await rulesChannel.send({ embeds: [embedRegras], files: [banner] });
+            console.log('Painel de regras integrado enviado com sucesso!');
         }
     } catch (error) {
         console.error('Erro ao enviar as regras:', error);
