@@ -1,36 +1,22 @@
-require('dotenv').config();
 const { Client, GatewayIntentBits } = require('discord.js');
 const { joinVoiceChannel } = require('@discordjs/voice');
-const express = require('express');
 
-// Configuração do servidor web para manter o Render acordado 24h
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-app.get('/', (req, res) => {
-    res.send('Bot do HushPvP está online!');
-});
-
-app.listen(PORT, () => {
-    console.log(`Servidor web rodando na porta ${PORT}`);
-});
-
-// Configuração do Bot do Discord
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildVoiceStates,
-        GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.MessageContent,
-        GatewayIntentBits.GuildMembers
+        GatewayIntentBits.GuildVoiceStates
     ]
 });
 
+// Insira o token do seu bot e o ID do canal de voz aqui
+const TOKEN = 'SEU_TOKEN_DO_BOT_AQUI';
+const CHANNEL_ID = 'ID_DO_CANAL_DE_VOZ_AQUI';
+
 client.once('ready', async () => {
-    console.log(`Bot logado como ${client.user.tag}! Pronto para gerenciar a staff e o canal de voz.`);
+    console.log(`Bot logado como ${client.user.tag}!`);
 
     try {
-        const channel = await client.channels.fetch(process.env.CHANNEL_ID);
+        const channel = await client.channels.fetch(CHANNEL_ID);
         
         if (!channel || channel.type !== 2) {
             return console.log('Canal de voz não encontrado ou ID inválido!');
@@ -42,18 +28,10 @@ client.once('ready', async () => {
             adapterCreator: channel.guild.voiceAdapterCreator,
         });
 
-        console.log(`Conectado com sucesso no canal de voz: ${channel.name}`);
+        console.log(`Conectado com sucesso no canal: ${channel.name}`);
     } catch (error) {
         console.error('Erro ao conectar no canal de voz:', error);
     }
 });
 
-client.on('messageCreate', (message) => {
-    if (message.author.bot) return;
-
-    if (message.content === '!ping') {
-        message.reply('Pong! O bot está online e operando.');
-    }
-});
-
-client.login(process.env.DISCORD_TOKEN);
+client.login(TOKEN);
