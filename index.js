@@ -4,32 +4,33 @@ const {
     Client,
     GatewayIntentBits,
     EmbedBuilder,
-    AttachmentBuilder
+    AttachmentBuilder,
+    ActivityType
 } = require('discord.js');
 
 const { joinVoiceChannel } = require('@discordjs/voice');
 const express = require('express');
 
 
-// ======================================================
-// 🌐 SERVIDOR WEB
-// ======================================================
+// ==========================================================
+// 🌐 SERVIDOR WEB - HUSHPVP
+// ==========================================================
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.get('/', (req, res) => {
-    res.send('HushPvP Bot está online! ✅');
+    res.send('🐺 HushPvP Bot está ONLINE!');
 });
 
 app.listen(PORT, () => {
-    console.log(`🌐 HushPvP rodando na porta ${PORT}`);
+    console.log(`🌐 Servidor web rodando na porta ${PORT}`);
 });
 
 
-// ======================================================
-// 🤖 BOT
-// ======================================================
+// ==========================================================
+// 🤖 CLIENTE DO DISCORD
+// ==========================================================
 
 const client = new Client({
     intents: [
@@ -42,18 +43,36 @@ const client = new Client({
 });
 
 
-// ======================================================
-// 🚀 BOT ONLINE
-// ======================================================
+// ==========================================================
+// 🚀 QUANDO O BOT FICAR ONLINE
+// ==========================================================
 
 client.once('ready', async () => {
 
-    console.log(`✅ Bot conectado como ${client.user.tag}`);
+    console.log('==========================================');
+    console.log(`🐺 HushPvP ONLINE!`);
+    console.log(`🤖 Logado como: ${client.user.tag}`);
+    console.log('==========================================');
 
 
-    // ==================================================
-    // 🔊 CANAL DE VOZ
-    // ==================================================
+    // ======================================================
+    // 🎮 STATUS DO BOT
+    // ======================================================
+
+    client.user.setPresence({
+        activities: [
+            {
+                name: 'HushPvP ⚔️',
+                type: ActivityType.Playing
+            }
+        ],
+        status: 'online'
+    });
+
+
+    // ======================================================
+    // 🔊 CONECTAR NO CANAL DE VOZ
+    // ======================================================
 
     try {
 
@@ -61,39 +80,44 @@ client.once('ready', async () => {
             process.env.CHANNEL_ID
         );
 
-        if (voiceChannel && voiceChannel.isVoiceBased()) {
+        if (!voiceChannel) {
+
+            console.log('❌ Canal de voz não encontrado.');
+
+        } else if (!voiceChannel.isVoiceBased()) {
+
+            console.log('❌ CHANNEL_ID não é um canal de voz.');
+
+        } else {
 
             joinVoiceChannel({
                 channelId: voiceChannel.id,
                 guildId: voiceChannel.guild.id,
                 adapterCreator: voiceChannel.guild.voiceAdapterCreator,
+
                 selfDeaf: true,
                 selfMute: false
             });
 
             console.log(
-                `🔊 Conectado no canal: ${voiceChannel.name}`
+                `🔊 HushPvP conectado em: ${voiceChannel.name}`
             );
-
-        } else {
-
-            console.log('❌ Canal de voz não encontrado.');
 
         }
 
     } catch (error) {
 
         console.error(
-            '❌ Erro no canal de voz:',
+            '❌ Erro ao conectar no canal de voz:',
             error
         );
 
     }
 
 
-    // ==================================================
+    // ======================================================
     // 📜 CANAL DE REGRAS
-    // ==================================================
+    // ======================================================
 
     try {
 
@@ -101,9 +125,19 @@ client.once('ready', async () => {
             process.env.CANAL_REGRAS_ID
         );
 
-        if (!rulesChannel || !rulesChannel.isTextBased()) {
+        if (!rulesChannel) {
 
             console.log('❌ Canal de regras não encontrado.');
+            return;
+
+        }
+
+        if (!rulesChannel.isTextBased()) {
+
+            console.log(
+                '❌ CANAL_REGRAS_ID não é um canal de texto.'
+            );
+
             return;
 
         }
@@ -119,49 +153,59 @@ client.once('ready', async () => {
                 limit: 100
             });
 
-            await rulesChannel.bulkDelete(
-                messages,
-                true
-            );
+            if (messages.size > 0) {
+
+                await rulesChannel.bulkDelete(
+                    messages,
+                    true
+                );
+
+                console.log(
+                    '🧹 Mensagens antigas removidas.'
+                );
+
+            }
 
         } catch (error) {
 
             console.log(
-                '⚠️ Não consegui apagar algumas mensagens antigas.'
+                '⚠️ Algumas mensagens antigas não puderam ser removidas.'
             );
 
         }
 
 
         // ==================================================
-        // 🖼️ CARREGAR BANNER
+        // 🖼️ BANNER GRANDE
+        // ==================================================
+        //
+        // IMPORTANTE:
+        // NÃO usamos .setImage() aqui.
+        //
+        // Assim o Discord mostra a imagem como anexo normal,
+        // permitindo que ela apareça maior.
         // ==================================================
 
         const banner = new AttachmentBuilder(
-            './regras.png'
+            './regras.png',
+            {
+                name: 'regras.png'
+            }
         );
 
-
-        // ==================================================
-        // 🖼️ PRIMEIRO EMBED = BANNER NO TOPO
-        // ==================================================
-
-        const bannerEmbed = new EmbedBuilder()
-
-            .setColor('#00A8FF')
-
-            .setImage(
-                'attachment://regras.png'
-            );
+        await rulesChannel.send({
+            files: [banner]
+        });
 
 
         // ==================================================
-        // 📜 SEGUNDO EMBED = REGRAS
+        // 📦 CAIXA PRINCIPAL DAS REGRAS
         // ==================================================
 
         const rulesEmbed = new EmbedBuilder()
 
-            .setColor('#00A8FF')
+            // Azul HushPvP na lateral
+            .setColor('#009DFF')
 
             .setDescription(
 `# 📜 SERVER RULES
@@ -224,41 +268,33 @@ client.once('ready', async () => {
 
 • Punishments may be increased for repeated offenses
 • Staff decisions are final
-• Rules may be updated without prior notice`
-            )
+• Rules may be updated without prior notice
 
-            .setFooter({
-                text: 'HushPvP • Play fair. Respect others. Stay competitive. ⚔️'
-            });
+> 🐺 **HushPvP**
+> Play fair • Respect others • Stay competitive ⚔️`
+            );
 
 
         // ==================================================
-        // 📤 ENVIAR TUDO JUNTO
+        // 📤 ENVIAR CAIXA
         // ==================================================
 
         await rulesChannel.send({
-
-            embeds: [
-                bannerEmbed,
-                rulesEmbed
-            ],
-
-            files: [
-                banner
-            ]
-
+            embeds: [rulesEmbed]
         });
 
 
-        console.log(
-            '✅ Painel de regras enviado!'
-        );
+        console.log('==========================================');
+        console.log('📜 Painel HushPvP enviado!');
+        console.log('🖼️ Banner enviado!');
+        console.log('📦 Regras enviadas!');
+        console.log('==========================================');
 
 
     } catch (error) {
 
         console.error(
-            '❌ Erro ao enviar regras:',
+            '❌ Erro no sistema de regras:',
             error
         );
 
@@ -267,8 +303,22 @@ client.once('ready', async () => {
 });
 
 
-// ======================================================
-// 🔐 LOGIN
-// ======================================================
+// ==========================================================
+// ❌ ERROS DO BOT
+// ==========================================================
+
+client.on('error', error => {
+
+    console.error(
+        '❌ Erro no Discord:',
+        error
+    );
+
+});
+
+
+// ==========================================================
+// 🔐 LOGIN HUSHPVP
+// ==========================================================
 
 client.login(process.env.DISCORD_TOKEN);
