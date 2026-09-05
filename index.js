@@ -1,18 +1,33 @@
 require('dotenv').config();
-const { Client, GatewayIntentBits, EmbedBuilder, AttachmentBuilder } = require('discord.js');
+
+const {
+    Client,
+    GatewayIntentBits,
+    AttachmentBuilder
+} = require('discord.js');
+
 const { joinVoiceChannel } = require('@discordjs/voice');
 const express = require('express');
+
+// ======================================================
+// 🌐 SERVIDOR WEB
+// ======================================================
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.get('/', (req, res) => {
-    res.send('Bot do HushPvP está online!');
+    res.send('HushPvP Bot está online! ✅');
 });
 
 app.listen(PORT, () => {
-    console.log(`Servidor web rodando na porta ${PORT}`);
+    console.log(`🌐 Servidor web do HushPvP rodando na porta ${PORT}`);
 });
+
+
+// ======================================================
+// 🤖 BOT HUSHPVP
+// ======================================================
 
 const client = new Client({
     intents: [
@@ -24,90 +39,251 @@ const client = new Client({
     ]
 });
 
+
+// ======================================================
+// 🚀 QUANDO O BOT LIGAR
+// ======================================================
+
 client.once('ready', async () => {
-    console.log(`Bot logado como ${client.user.tag}!`);
+
+    console.log(`✅ HushPvP conectado como ${client.user.tag}!`);
+
+
+    // ==================================================
+    // 🔊 ENTRAR NO CANAL DE VOZ
+    // ==================================================
 
     try {
-        const voiceChannel = await client.channels.fetch(process.env.CHANNEL_ID);
-        if (voiceChannel) {
+
+        const voiceChannel = await client.channels.fetch(
+            process.env.CHANNEL_ID
+        );
+
+        if (!voiceChannel) {
+            console.log('❌ Canal de voz não encontrado.');
+        }
+
+        else if (!voiceChannel.isVoiceBased()) {
+            console.log('❌ O CHANNEL_ID não é de um canal de voz.');
+        }
+
+        else {
+
             joinVoiceChannel({
                 channelId: voiceChannel.id,
                 guildId: voiceChannel.guild.id,
                 adapterCreator: voiceChannel.guild.voiceAdapterCreator,
+
+                // Bot fica surdo no canal
+                selfDeaf: true,
+
+                // Bot não fica mutado
+                selfMute: false
             });
-            console.log(`Conectado no canal de voz: ${voiceChannel.name}`);
+
+            console.log(
+                `🔊 HushPvP conectado no canal de voz: ${voiceChannel.name}`
+            );
+
         }
+
     } catch (error) {
-        console.error('Erro no canal de voz:', error);
+
+        console.error(
+            '❌ Erro ao conectar no canal de voz:',
+            error
+        );
+
     }
+
+
+    // ==================================================
+    // 📜 CANAL DE REGRAS
+    // ==================================================
 
     try {
-        const rulesChannel = await client.channels.fetch(process.env.CANAL_REGRAS_ID);
-        if (rulesChannel && rulesChannel.isTextBased()) {
-            const messages = await rulesChannel.messages.fetch({ limit: 10 });
+
+        const rulesChannel = await client.channels.fetch(
+            process.env.CANAL_REGRAS_ID
+        );
+
+        if (!rulesChannel) {
+            console.log('❌ Canal de regras não encontrado.');
+            return;
+        }
+
+        if (!rulesChannel.isTextBased()) {
+            console.log('❌ O CANAL_REGRAS_ID não é um canal de texto.');
+            return;
+        }
+
+
+        // ==================================================
+        // 🧹 APAGAR MENSAGENS ANTIGAS
+        // ==================================================
+
+        try {
+
+            const messages = await rulesChannel.messages.fetch({
+                limit: 100
+            });
+
             if (messages.size > 0) {
-                await rulesChannel.bulkDelete(messages).catch(() => {});
+
+                await rulesChannel.bulkDelete(
+                    messages,
+                    true
+                );
+
+                console.log('🧹 Mensagens antigas apagadas.');
+
             }
 
-            // 1. Prepara o arquivo do banner
-            const banner = new AttachmentBuilder('./regras.png');
+        } catch (error) {
 
-            // 2. Envia o banner sozinho primeiro (ficando no topo absoluto)
-            await rulesChannel.send({ files: [banner] });
+            console.log(
+                '⚠️ Não foi possível apagar todas as mensagens antigas.'
+            );
 
-            // 3. Cria o Embed com as regras grandes e a linha lateral azul (.setColor)
-            const embedRegras = new EmbedBuilder()
-                .setColor('#00bfff') // Linha azul lateral do embed
-                .setTitle('📜 SERVER RULES — HUSHPVP')
-                .setDescription('To maintain a fair, competitive and enjoyable environment, all players must follow the rules below strictly.')
-                .addFields(
-                    { 
-                        name: '🔇 ━━━━━━━━ CHAT MUTES ━━━━━━━━ 🔇', 
-                        value: '• **Links não autorizados:** Divulgação de links maliciosos, convites de outros servers ou IPs externos.\n' +
-                               '• **Flood e Spam:** Enviar mensagens repetidas, símbolos em excesso ou poluir o chat global.\n' +
-                               '• **Toxicidade e Desrespeito:** Ofensas leves, provocações excessivas, xingamentos ou falta de educação com membros.\n' +
-                               '• **Comércio Irregular:** Venda de itens, contas ou serviços fora dos canais de negociação permitidos.\n' +
-                               '• **Palavras Inadequadas:** Uso de linguagem imprópria ou burlar filtros de chat do servidor.\n' +
-                               '• **Discriminação Leve:** Comentários preconceituosos de baixo impacto ou piadas ofensivas.', 
-                        inline: false 
-                    },
-                    { 
-                        name: '⛔ ━━━━━━━━ PERMANENT CHAT MUTES ━━━━━━━━ ⛔', 
-                        value: '• **Assédio e Bullying:** Perseguição contínua, humilhação ou ataques direcionados a um jogador.\n' +
-                               '• **Preconceito Grave:** Racismo, homofobia, xenofobia, intolerância religiosa ou discursos de ódio.\n' +
-                               '• **Apologia a Crimes:** Incentivo a suicídio, automutilação, drogas ou atos ilícitos graves.\n' +
-                               '• **Provocação Extrema:** Xingamentos pesados e agressão verbal reincidente no chat.\n' +
-                               '• **Conteúdo NSFW / 18+:** Envio de imagens, textos ou links com conteúdos adultos ou explícitos.', 
-                        inline: false 
-                    },
-                    { 
-                        name: '👢 ━━━━━━━━ KICKS ━━━━━━━━ 👢', 
-                        value: '• **Atrapalhar a Staff:** Interferir intencionalmente no trabalho da moderação ou comandos de suporte.\n' +
-                               '• **Abuso de Reports:** Enviar tickets ou denúncias falsas repetidas vezes para tumultuar o atendimento.\n' +
-                               '• **Antijogo Leve:** Comportamentos dentro das partidas que estraguem a experiência coletiva dos aliados.\n' +
-                               '• **Desconexão Tática:** Tentar forçar quedas de conexão para fugir de situações de combate ou regras.', 
-                        inline: false 
-                    },
-                    { 
-                        name: '🔨 ━━━━━━━━ BANS E PUNIÇÕES GERAIS ━━━━━━━━ 🔨', 
-                        value: '• **Uso de Cheats/Hacks:** Qualquer modificação ilegal no client (Reach, KillAura, X-Ray, Fly, Autoclicker, Macros).\n' +
-                               '• **Exploração de Bugs (Abuse):** Aproveitar-se de falhas de plugins, mapas ou duplicações para obter vantagens.\n' +
-                               '• **Falsificação de Identidade:** Fingir ser dono, adm, moderador ou criador de conteúdo do servidor.\n' +
-                               '• **Roubo e Golpes:** Enganar jogadores em trocas, comércio de coins/itens ou roubar dados de contas.\n' +
-                               '• **Ban Evading:** Criar contas alternativas (fakes) para entrar no servidor após ter recebido um banimento permanente.', 
-                        inline: false 
-                    }
-                )
-                .setFooter({ text: 'HushPvP • Jogue limpo. Respeite os outros. Seja competitivo. ⚔️' })
-                .setTimestamp();
-
-            // 4. Envia o embed logo abaixo da imagem, mantendo a lateral azul
-            await rulesChannel.send({ embeds: [embedRegras] });
-            console.log('Banner no topo e painel de regras enviados com sucesso!');
         }
+
+
+        // ==================================================
+        // 🖼️ BANNER
+        // ==================================================
+
+        const banner = new AttachmentBuilder('./regras.png');
+
+        await rulesChannel.send({
+            files: [banner]
+        });
+
+
+        // ==================================================
+        // 📜 HUSHPVP SERVER RULES
+        // ==================================================
+
+        await rulesChannel.send(
+`# 📜 HUSHPVP SERVER RULES
+
+> To maintain a fair, competitive and enjoyable environment, all players must follow the rules below.`
+        );
+
+
+        // ==================================================
+        // 🔇 CHAT MUTES
+        // ==================================================
+
+        await rulesChannel.send(
+`# 🔇 CHAT MUTES
+
+• Unauthorized links (except approved creators)
+• Advertising servers, communities or services
+• Selling items outside allowed channels
+• Bypassing chat filters
+• Toxic or disrespectful behavior
+• Mild discrimination
+• Inappropriate content
+• Spam, flooding or repetitive messages`
+        );
+
+
+        // ==================================================
+        // ⛔ PERMANENT CHAT MUTES
+        // ==================================================
+
+        await rulesChannel.send(
+`# ⛔ PERMANENT CHAT MUTES
+
+• Harassment, bullying, threats or intimidation
+• Racist, hateful or discriminatory speech
+• Encouraging suicide or self-harm
+• Intentional provocation to create conflicts
+• Sexual, NSFW or 18+ content`
+        );
+
+
+        // ==================================================
+        // 👢 KICKS
+        // ==================================================
+
+        await rulesChannel.send(
+`# 👢 KICKS
+
+• Interfering with staff or server systems
+• Repeated false reports
+• Intentionally avoiding combat
+• Disruptive gameplay behavior
+• Situations where staff consider a kick necessary`
+        );
+
+
+        // ==================================================
+        // 🚫 PERMANENT BANS
+        // ==================================================
+
+        await rulesChannel.send(
+`# 🚫 PERMANENT BANS
+
+• Cheats, hacks or unfair advantages
+• Exploiting bugs or unintended mechanics
+• DDoS threats or attacks
+• Account sharing to evade punishments
+• Ban evasion
+• Impersonating staff members
+• Actions that seriously damage the community`
+        );
+
+
+        // ==================================================
+        // ⏳ TEMPORARY BANS
+        // ==================================================
+
+        await rulesChannel.send(
+`# ⏳ TEMPORARY BANS
+
+• Repeated combat avoidance
+• Match fixing or collusion
+• Bug abuse
+• Offensive builds
+• Unsportsmanlike behavior
+• Stat boosting`
+        );
+
+
+        // ==================================================
+        // ℹ️ ADDITIONAL INFORMATION
+        // ==================================================
+
+        await rulesChannel.send(
+`# ℹ️ ADDITIONAL INFORMATION
+
+• Punishments may be increased for repeated offenses
+• Staff decisions are final
+• Rules may be updated without prior notice
+
+> **HushPvP • Play fair. Respect others. Stay competitive. ⚔️**`
+        );
+
+
+        console.log(
+            '✅ Regras do HushPvP enviadas com sucesso!'
+        );
+
     } catch (error) {
-        console.error('Erro ao enviar as regras:', error);
+
+        console.error(
+            '❌ Erro ao enviar as regras:',
+            error
+        );
+
     }
+
 });
+
+
+// ======================================================
+// 🔐 LOGIN
+// ======================================================
 
 client.login(process.env.DISCORD_TOKEN);
