@@ -3,11 +3,13 @@ require('dotenv').config();
 const {
     Client,
     GatewayIntentBits,
+    EmbedBuilder,
     AttachmentBuilder
 } = require('discord.js');
 
 const { joinVoiceChannel } = require('@discordjs/voice');
 const express = require('express');
+
 
 // ======================================================
 // 🌐 SERVIDOR WEB
@@ -41,7 +43,7 @@ const client = new Client({
 
 
 // ======================================================
-// 🚀 QUANDO O BOT LIGAR
+// 🚀 QUANDO O BOT FICAR ONLINE
 // ======================================================
 
 client.once('ready', async () => {
@@ -60,24 +62,20 @@ client.once('ready', async () => {
         );
 
         if (!voiceChannel) {
+
             console.log('❌ Canal de voz não encontrado.');
-        }
 
-        else if (!voiceChannel.isVoiceBased()) {
-            console.log('❌ O CHANNEL_ID não é de um canal de voz.');
-        }
+        } else if (!voiceChannel.isVoiceBased()) {
 
-        else {
+            console.log('❌ CHANNEL_ID não é um canal de voz.');
+
+        } else {
 
             joinVoiceChannel({
                 channelId: voiceChannel.id,
                 guildId: voiceChannel.guild.id,
                 adapterCreator: voiceChannel.guild.voiceAdapterCreator,
-
-                // Bot fica surdo no canal
                 selfDeaf: true,
-
-                // Bot não fica mutado
                 selfMute: false
             });
 
@@ -108,13 +106,17 @@ client.once('ready', async () => {
         );
 
         if (!rulesChannel) {
+
             console.log('❌ Canal de regras não encontrado.');
             return;
+
         }
 
         if (!rulesChannel.isTextBased()) {
-            console.log('❌ O CANAL_REGRAS_ID não é um canal de texto.');
+
+            console.log('❌ CANAL_REGRAS_ID não é um canal de texto.');
             return;
+
         }
 
 
@@ -142,7 +144,7 @@ client.once('ready', async () => {
         } catch (error) {
 
             console.log(
-                '⚠️ Não foi possível apagar todas as mensagens antigas.'
+                '⚠️ Algumas mensagens antigas não puderam ser apagadas.'
             );
 
         }
@@ -152,30 +154,30 @@ client.once('ready', async () => {
         // 🖼️ BANNER
         // ==================================================
 
-        const banner = new AttachmentBuilder('./regras.png');
-
-        await rulesChannel.send({
-            files: [banner]
-        });
-
-
-        // ==================================================
-        // 📜 HUSHPVP SERVER RULES
-        // ==================================================
-
-        await rulesChannel.send(
-`# 📜 HUSHPVP SERVER RULES
-
-> To maintain a fair, competitive and enjoyable environment, all players must follow the rules below.`
+        const banner = new AttachmentBuilder(
+            './regras.png'
         );
 
 
         // ==================================================
-        // 🔇 CHAT MUTES
+        // 📦 EMBED / CAIXA DE REGRAS
         // ==================================================
 
-        await rulesChannel.send(
-`# 🔇 CHAT MUTES
+        const rulesEmbed = new EmbedBuilder()
+
+            // cor da lateral da caixa
+            .setColor('#2B2D31')
+
+            // imagem dentro da caixa
+            .setImage('attachment://regras.png')
+
+            // regras
+            .setDescription(
+`# 📜 SERVER RULES
+
+> To maintain a fair, competitive and enjoyable environment, all players must follow the rules below.
+
+# 🔇 CHAT MUTES
 
 • Unauthorized links (except approved creators)
 • Advertising servers, communities or services
@@ -184,46 +186,28 @@ client.once('ready', async () => {
 • Toxic or disrespectful behavior
 • Mild discrimination
 • Inappropriate content
-• Spam, flooding or repetitive messages`
-        );
+• Spam, flooding or repetitive messages
 
 
-        // ==================================================
-        // ⛔ PERMANENT CHAT MUTES
-        // ==================================================
-
-        await rulesChannel.send(
-`# ⛔ PERMANENT CHAT MUTES
+# ⛔ PERMANENT CHAT MUTES
 
 • Harassment, bullying, threats or intimidation
 • Racist, hateful or discriminatory speech
 • Encouraging suicide or self-harm
 • Intentional provocation to create conflicts
-• Sexual, NSFW or 18+ content`
-        );
+• Sexual, NSFW or 18+ content
 
 
-        // ==================================================
-        // 👢 KICKS
-        // ==================================================
-
-        await rulesChannel.send(
-`# 👢 KICKS
+# 👢 KICKS
 
 • Interfering with staff or server systems
 • Repeated false reports
 • Intentionally avoiding combat
 • Disruptive gameplay behavior
-• Situations where staff consider a kick necessary`
-        );
+• Situations where staff consider a kick necessary
 
 
-        // ==================================================
-        // 🚫 PERMANENT BANS
-        // ==================================================
-
-        await rulesChannel.send(
-`# 🚫 PERMANENT BANS
+# 🚫 PERMANENT BANS
 
 • Cheats, hacks or unfair advantages
 • Exploiting bugs or unintended mechanics
@@ -231,44 +215,45 @@ client.once('ready', async () => {
 • Account sharing to evade punishments
 • Ban evasion
 • Impersonating staff members
-• Actions that seriously damage the community`
-        );
+• Actions that seriously damage the community
 
 
-        // ==================================================
-        // ⏳ TEMPORARY BANS
-        // ==================================================
-
-        await rulesChannel.send(
-`# ⏳ TEMPORARY BANS
+# ⏳ TEMPORARY BANS
 
 • Repeated combat avoidance
 • Match fixing or collusion
 • Bug abuse
 • Offensive builds
 • Unsportsmanlike behavior
-• Stat boosting`
-        );
+• Stat boosting
 
 
-        // ==================================================
-        // ℹ️ ADDITIONAL INFORMATION
-        // ==================================================
-
-        await rulesChannel.send(
-`# ℹ️ ADDITIONAL INFORMATION
+# ℹ️ ADDITIONAL INFORMATION
 
 • Punishments may be increased for repeated offenses
 • Staff decisions are final
-• Rules may be updated without prior notice
+• Rules may be updated without prior notice`
+            )
 
-> **HushPvP • Play fair. Respect others. Stay competitive. ⚔️**`
-        );
+            .setFooter({
+                text: 'HushPvP • Play fair. Respect others. Stay competitive. ⚔️'
+            });
+
+
+        // ==================================================
+        // 📤 ENVIAR PAINEL
+        // ==================================================
+
+        await rulesChannel.send({
+            embeds: [rulesEmbed],
+            files: [banner]
+        });
 
 
         console.log(
-            '✅ Regras do HushPvP enviadas com sucesso!'
+            '✅ Painel de regras do HushPvP enviado com sucesso!'
         );
+
 
     } catch (error) {
 
