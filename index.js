@@ -23,12 +23,12 @@ app.get('/', (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`🌐 Servidor web do HushPvP rodando na porta ${PORT}`);
+    console.log(`🌐 HushPvP rodando na porta ${PORT}`);
 });
 
 
 // ======================================================
-// 🤖 BOT HUSHPVP
+// 🤖 BOT
 // ======================================================
 
 const client = new Client({
@@ -43,16 +43,16 @@ const client = new Client({
 
 
 // ======================================================
-// 🚀 QUANDO O BOT FICAR ONLINE
+// 🚀 BOT ONLINE
 // ======================================================
 
 client.once('ready', async () => {
 
-    console.log(`✅ HushPvP conectado como ${client.user.tag}!`);
+    console.log(`✅ Bot conectado como ${client.user.tag}`);
 
 
     // ==================================================
-    // 🔊 ENTRAR NO CANAL DE VOZ
+    // 🔊 CANAL DE VOZ
     // ==================================================
 
     try {
@@ -61,15 +61,7 @@ client.once('ready', async () => {
             process.env.CHANNEL_ID
         );
 
-        if (!voiceChannel) {
-
-            console.log('❌ Canal de voz não encontrado.');
-
-        } else if (!voiceChannel.isVoiceBased()) {
-
-            console.log('❌ CHANNEL_ID não é um canal de voz.');
-
-        } else {
+        if (voiceChannel && voiceChannel.isVoiceBased()) {
 
             joinVoiceChannel({
                 channelId: voiceChannel.id,
@@ -80,15 +72,19 @@ client.once('ready', async () => {
             });
 
             console.log(
-                `🔊 HushPvP conectado no canal de voz: ${voiceChannel.name}`
+                `🔊 Conectado no canal: ${voiceChannel.name}`
             );
+
+        } else {
+
+            console.log('❌ Canal de voz não encontrado.');
 
         }
 
     } catch (error) {
 
         console.error(
-            '❌ Erro ao conectar no canal de voz:',
+            '❌ Erro no canal de voz:',
             error
         );
 
@@ -105,23 +101,16 @@ client.once('ready', async () => {
             process.env.CANAL_REGRAS_ID
         );
 
-        if (!rulesChannel) {
+        if (!rulesChannel || !rulesChannel.isTextBased()) {
 
             console.log('❌ Canal de regras não encontrado.');
             return;
 
         }
 
-        if (!rulesChannel.isTextBased()) {
-
-            console.log('❌ CANAL_REGRAS_ID não é um canal de texto.');
-            return;
-
-        }
-
 
         // ==================================================
-        // 🧹 APAGAR MENSAGENS ANTIGAS
+        // 🧹 APAGAR PAINEL ANTIGO
         // ==================================================
 
         try {
@@ -130,28 +119,22 @@ client.once('ready', async () => {
                 limit: 100
             });
 
-            if (messages.size > 0) {
-
-                await rulesChannel.bulkDelete(
-                    messages,
-                    true
-                );
-
-                console.log('🧹 Mensagens antigas apagadas.');
-
-            }
+            await rulesChannel.bulkDelete(
+                messages,
+                true
+            );
 
         } catch (error) {
 
             console.log(
-                '⚠️ Algumas mensagens antigas não puderam ser apagadas.'
+                '⚠️ Não consegui apagar algumas mensagens antigas.'
             );
 
         }
 
 
         // ==================================================
-        // 🖼️ BANNER
+        // 🖼️ CARREGAR BANNER
         // ==================================================
 
         const banner = new AttachmentBuilder(
@@ -160,22 +143,31 @@ client.once('ready', async () => {
 
 
         // ==================================================
-        // 📦 EMBED / CAIXA DE REGRAS
+        // 🖼️ PRIMEIRO EMBED = BANNER NO TOPO
+        // ==================================================
+
+        const bannerEmbed = new EmbedBuilder()
+
+            .setColor('#00A8FF')
+
+            .setImage(
+                'attachment://regras.png'
+            );
+
+
+        // ==================================================
+        // 📜 SEGUNDO EMBED = REGRAS
         // ==================================================
 
         const rulesEmbed = new EmbedBuilder()
 
-            // cor da lateral da caixa
-            .setColor('#2B2D31')
+            .setColor('#00A8FF')
 
-            // imagem dentro da caixa
-            .setImage('attachment://regras.png')
-
-            // regras
             .setDescription(
 `# 📜 SERVER RULES
 
 > To maintain a fair, competitive and enjoyable environment, all players must follow the rules below.
+
 
 # 🔇 CHAT MUTES
 
@@ -241,24 +233,32 @@ client.once('ready', async () => {
 
 
         // ==================================================
-        // 📤 ENVIAR PAINEL
+        // 📤 ENVIAR TUDO JUNTO
         // ==================================================
 
         await rulesChannel.send({
-            embeds: [rulesEmbed],
-            files: [banner]
+
+            embeds: [
+                bannerEmbed,
+                rulesEmbed
+            ],
+
+            files: [
+                banner
+            ]
+
         });
 
 
         console.log(
-            '✅ Painel de regras do HushPvP enviado com sucesso!'
+            '✅ Painel de regras enviado!'
         );
 
 
     } catch (error) {
 
         console.error(
-            '❌ Erro ao enviar as regras:',
+            '❌ Erro ao enviar regras:',
             error
         );
 
