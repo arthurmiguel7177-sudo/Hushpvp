@@ -9,7 +9,8 @@ const {
     MediaGalleryBuilder,
     MediaGalleryItemBuilder,
     MessageFlags,
-    ActivityType
+    ActivityType,
+    SlashCommandBuilder
 } = require('discord.js');
 
 const { joinVoiceChannel } = require('@discordjs/voice');
@@ -48,6 +49,15 @@ const client = new Client({
 
 
 // ======================================================
+// ⚔️ COMANDO /TEAM
+// ======================================================
+
+const teamCommand = new SlashCommandBuilder()
+    .setName('team')
+    .setDescription('Mostra a equipe oficial do HushPvP');
+
+
+// ======================================================
 // 🚀 BOT ONLINE
 // ======================================================
 
@@ -71,6 +81,28 @@ client.once('ready', async () => {
         ],
         status: 'online'
     });
+
+
+    // ==================================================
+    // ⚔️ REGISTRAR /TEAM
+    // ==================================================
+
+    try {
+
+        await client.application.commands.set([
+            teamCommand.toJSON()
+        ]);
+
+        console.log('✅ Comando /team registrado!');
+
+    } catch (error) {
+
+        console.error(
+            '❌ Erro ao registrar /team:',
+            error
+        );
+
+    }
 
 
     // ==================================================
@@ -149,13 +181,15 @@ client.once('ready', async () => {
                     true
                 );
 
-                console.log('🧹 Mensagens antigas apagadas.');
+                console.log(
+                    '🧹 Mensagens antigas apagadas.'
+                );
             }
 
         } catch (error) {
 
             console.log(
-                '⚠️ Não foi possível apagar algumas mensagens antigas.'
+                '⚠️ Algumas mensagens antigas não puderam ser apagadas.'
             );
         }
 
@@ -173,17 +207,14 @@ client.once('ready', async () => {
 
 
         // ==================================================
-        // 📦 PAINEL COMPONENTS V2
+        // 📦 PAINEL DE REGRAS - COMPONENTS V2
         // ==================================================
 
-        const container = new ContainerBuilder()
+        const rulesContainer = new ContainerBuilder()
 
             .setAccentColor(0x009DFF)
 
-            // ==============================================
-            // 🖼️ BANNER NO TOPO
-            // ==============================================
-
+            // BANNER
             .addMediaGalleryComponents(
                 new MediaGalleryBuilder()
                     .addItems(
@@ -194,11 +225,7 @@ client.once('ready', async () => {
                     )
             )
 
-
-            // ==============================================
-            // 📜 SERVER RULES
-            // ==============================================
-
+            // SERVER RULES
             .addTextDisplayComponents(
                 new TextDisplayBuilder()
                     .setContent(
@@ -208,11 +235,7 @@ client.once('ready', async () => {
                     )
             )
 
-
-            // ==============================================
-            // 🔇 CHAT MUTES
-            // ==============================================
-
+            // CHAT MUTES
             .addTextDisplayComponents(
                 new TextDisplayBuilder()
                     .setContent(
@@ -229,11 +252,7 @@ client.once('ready', async () => {
                     )
             )
 
-
-            // ==============================================
-            // ⛔ PERMANENT CHAT MUTES
-            // ==============================================
-
+            // PERMANENT CHAT MUTES
             .addTextDisplayComponents(
                 new TextDisplayBuilder()
                     .setContent(
@@ -247,11 +266,7 @@ client.once('ready', async () => {
                     )
             )
 
-
-            // ==============================================
-            // 👢 KICKS
-            // ==============================================
-
+            // KICKS
             .addTextDisplayComponents(
                 new TextDisplayBuilder()
                     .setContent(
@@ -265,11 +280,7 @@ client.once('ready', async () => {
                     )
             )
 
-
-            // ==============================================
-            // 🚫 PERMANENT BANS
-            // ==============================================
-
+            // PERMANENT BANS
             .addTextDisplayComponents(
                 new TextDisplayBuilder()
                     .setContent(
@@ -285,11 +296,7 @@ client.once('ready', async () => {
                     )
             )
 
-
-            // ==============================================
-            // ⏳ TEMPORARY BANS
-            // ==============================================
-
+            // TEMPORARY BANS
             .addTextDisplayComponents(
                 new TextDisplayBuilder()
                     .setContent(
@@ -304,11 +311,7 @@ client.once('ready', async () => {
                     )
             )
 
-
-            // ==============================================
-            // ℹ️ ADDITIONAL INFORMATION
-            // ==============================================
-
+            // INFO
             .addTextDisplayComponents(
                 new TextDisplayBuilder()
                     .setContent(
@@ -329,14 +332,18 @@ client.once('ready', async () => {
         // ==================================================
 
         await rulesChannel.send({
-            components: [container],
-            files: [banner],
+            components: [
+                rulesContainer
+            ],
+            files: [
+                banner
+            ],
             flags: MessageFlags.IsComponentsV2
         });
 
 
         console.log(
-            '✅ Painel de regras HushPvP enviado com sucesso!'
+            '✅ Painel de regras enviado!'
         );
 
 
@@ -352,7 +359,153 @@ client.once('ready', async () => {
 
 
 // ======================================================
-// ❌ ERROS DO CLIENTE
+// ⚔️ SISTEMA DO COMANDO /TEAM
+// ======================================================
+
+client.on('interactionCreate', async interaction => {
+
+    if (!interaction.isChatInputCommand()) return;
+
+    if (interaction.commandName !== 'team') return;
+
+
+    try {
+
+        // Busca todos os membros do servidor
+        await interaction.guild.members.fetch();
+
+
+        // ==================================================
+        // 👑 LOCALIZAR CARGOS
+        // ==================================================
+
+        const ownerRole = interaction.guild.roles.cache.find(
+            role =>
+                role.name.toLowerCase() === 'owner' ||
+                role.name.toLowerCase() === 'owners'
+        );
+
+        const adminRole = interaction.guild.roles.cache.find(
+            role =>
+                role.name.toLowerCase() === 'admin' ||
+                role.name.toLowerCase() === 'admins' ||
+                role.name.toLowerCase() === 'administrator'
+        );
+
+        const staffRole = interaction.guild.roles.cache.find(
+            role =>
+                role.name.toLowerCase() === 'staff' ||
+                role.name.toLowerCase() === 'staffs'
+        );
+
+
+        // ==================================================
+        // 👑 OWNERS
+        // ==================================================
+
+        const owners = ownerRole
+            ? ownerRole.members.map(
+                member => `• ${member}`
+            )
+            : [];
+
+
+        // ==================================================
+        // 🛡️ ADMINS
+        // ==================================================
+
+        const admins = adminRole
+            ? adminRole.members.map(
+                member => `• ${member}`
+            )
+            : [];
+
+
+        // ==================================================
+        // ⚔️ STAFF
+        // ==================================================
+
+        const staffs = staffRole
+            ? staffRole.members.map(
+                member => `• ${member}`
+            )
+            : [];
+
+
+        // ==================================================
+        // 📦 PAINEL /TEAM
+        // ==================================================
+
+        const teamContainer = new ContainerBuilder()
+
+            .setAccentColor(0x009DFF)
+
+            .addTextDisplayComponents(
+                new TextDisplayBuilder()
+                    .setContent(
+`# 🐺 HUSHPVP TEAM
+
+> Meet the official team responsible for keeping **HushPvP** organized, fair and competitive.
+
+# 👑 OWNER
+
+${owners.length
+    ? owners.join('\n')
+    : '• No members'}
+
+# 🛡️ ADMIN
+
+${admins.length
+    ? admins.join('\n')
+    : '• No members'}
+
+# ⚔️ STAFF
+
+${staffs.length
+    ? staffs.join('\n')
+    : '• No members'}
+
+> 💙 **HushPvP • Official Staff Team**`
+                    )
+            );
+
+
+        // ==================================================
+        // 📤 RESPONDER
+        // ==================================================
+
+        await interaction.reply({
+            components: [
+                teamContainer
+            ],
+            flags: MessageFlags.IsComponentsV2
+        });
+
+
+    } catch (error) {
+
+        console.error(
+            '❌ Erro no comando /team:',
+            error
+        );
+
+        if (!interaction.replied) {
+
+            await interaction.reply({
+                content:
+                    '❌ Ocorreu um erro ao carregar a equipe.',
+                ephemeral: true
+            });
+
+        }
+
+    }
+
+});
+
+
+// ======================================================
+// ❌ ERROS DO BOT
 // ======================================================
 
 client.on('error', error => {
