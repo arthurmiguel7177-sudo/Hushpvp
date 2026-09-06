@@ -18,6 +18,13 @@ const express = require('express');
 
 
 // ======================================================
+// ⚙️ CONFIGURAÇÕES
+// ======================================================
+
+const GUILD_ID = '1545935454694670378';
+
+
+// ======================================================
 // 🌐 SERVIDOR WEB
 // ======================================================
 
@@ -69,7 +76,7 @@ client.once('ready', async () => {
 
 
     // ==================================================
-    // 🎮 STATUS DO BOT
+    // 🎮 STATUS
     // ==================================================
 
     client.user.setPresence({
@@ -84,16 +91,18 @@ client.once('ready', async () => {
 
 
     // ==================================================
-    // ⚔️ REGISTRAR /TEAM
+    // ⚔️ REGISTRAR /TEAM NO SERVIDOR HUSHPVP
     // ==================================================
 
     try {
 
-        await client.application.commands.set([
+        const guild = await client.guilds.fetch(GUILD_ID);
+
+        await guild.commands.set([
             teamCommand.toJSON()
         ]);
 
-        console.log('✅ Comando /team registrado!');
+        console.log('✅ /team registrado diretamente no HushPvP!');
 
     } catch (error) {
 
@@ -101,7 +110,6 @@ client.once('ready', async () => {
             '❌ Erro ao registrar /team:',
             error
         );
-
     }
 
 
@@ -141,7 +149,7 @@ client.once('ready', async () => {
     } catch (error) {
 
         console.error(
-            '❌ Erro ao entrar no canal de voz:',
+            '❌ Erro no canal de voz:',
             error
         );
     }
@@ -181,9 +189,7 @@ client.once('ready', async () => {
                     true
                 );
 
-                console.log(
-                    '🧹 Mensagens antigas apagadas.'
-                );
+                console.log('🧹 Mensagens antigas apagadas.');
             }
 
         } catch (error) {
@@ -207,14 +213,13 @@ client.once('ready', async () => {
 
 
         // ==================================================
-        // 📦 PAINEL DE REGRAS - COMPONENTS V2
+        // 📦 PAINEL DAS REGRAS
         // ==================================================
 
         const rulesContainer = new ContainerBuilder()
 
             .setAccentColor(0x009DFF)
 
-            // BANNER
             .addMediaGalleryComponents(
                 new MediaGalleryBuilder()
                     .addItems(
@@ -225,7 +230,6 @@ client.once('ready', async () => {
                     )
             )
 
-            // SERVER RULES
             .addTextDisplayComponents(
                 new TextDisplayBuilder()
                     .setContent(
@@ -235,7 +239,6 @@ client.once('ready', async () => {
                     )
             )
 
-            // CHAT MUTES
             .addTextDisplayComponents(
                 new TextDisplayBuilder()
                     .setContent(
@@ -252,7 +255,6 @@ client.once('ready', async () => {
                     )
             )
 
-            // PERMANENT CHAT MUTES
             .addTextDisplayComponents(
                 new TextDisplayBuilder()
                     .setContent(
@@ -266,7 +268,6 @@ client.once('ready', async () => {
                     )
             )
 
-            // KICKS
             .addTextDisplayComponents(
                 new TextDisplayBuilder()
                     .setContent(
@@ -280,7 +281,6 @@ client.once('ready', async () => {
                     )
             )
 
-            // PERMANENT BANS
             .addTextDisplayComponents(
                 new TextDisplayBuilder()
                     .setContent(
@@ -296,7 +296,6 @@ client.once('ready', async () => {
                     )
             )
 
-            // TEMPORARY BANS
             .addTextDisplayComponents(
                 new TextDisplayBuilder()
                     .setContent(
@@ -311,7 +310,6 @@ client.once('ready', async () => {
                     )
             )
 
-            // INFO
             .addTextDisplayComponents(
                 new TextDisplayBuilder()
                     .setContent(
@@ -327,10 +325,6 @@ client.once('ready', async () => {
             );
 
 
-        // ==================================================
-        // 📤 ENVIAR PAINEL
-        // ==================================================
-
         await rulesChannel.send({
             components: [
                 rulesContainer
@@ -342,15 +336,13 @@ client.once('ready', async () => {
         });
 
 
-        console.log(
-            '✅ Painel de regras enviado!'
-        );
+        console.log('✅ Painel de regras enviado!');
 
 
     } catch (error) {
 
         console.error(
-            '❌ Erro ao enviar painel de regras:',
+            '❌ Erro ao enviar regras:',
             error
         );
     }
@@ -359,7 +351,7 @@ client.once('ready', async () => {
 
 
 // ======================================================
-// ⚔️ SISTEMA DO COMANDO /TEAM
+// ⚔️ SISTEMA DO /TEAM
 // ======================================================
 
 client.on('interactionCreate', async interaction => {
@@ -371,12 +363,11 @@ client.on('interactionCreate', async interaction => {
 
     try {
 
-        // Busca todos os membros do servidor
         await interaction.guild.members.fetch();
 
 
         // ==================================================
-        // 👑 LOCALIZAR CARGOS
+        // 👑 CARGOS
         // ==================================================
 
         const ownerRole = interaction.guild.roles.cache.find(
@@ -385,12 +376,14 @@ client.on('interactionCreate', async interaction => {
                 role.name.toLowerCase() === 'owners'
         );
 
+
         const adminRole = interaction.guild.roles.cache.find(
             role =>
                 role.name.toLowerCase() === 'admin' ||
                 role.name.toLowerCase() === 'admins' ||
                 role.name.toLowerCase() === 'administrator'
         );
+
 
         const staffRole = interaction.guild.roles.cache.find(
             role =>
@@ -433,7 +426,7 @@ client.on('interactionCreate', async interaction => {
 
 
         // ==================================================
-        // 📦 PAINEL /TEAM
+        // 📦 PAINEL TEAM
         // ==================================================
 
         const teamContainer = new ContainerBuilder()
@@ -470,10 +463,6 @@ ${staffs.length
             );
 
 
-        // ==================================================
-        // 📤 RESPONDER
-        // ==================================================
-
         await interaction.reply({
             components: [
                 teamContainer
@@ -485,9 +474,10 @@ ${staffs.length
     } catch (error) {
 
         console.error(
-            '❌ Erro no comando /team:',
+            '❌ Erro no /team:',
             error
         );
+
 
         if (!interaction.replied) {
 
@@ -496,7 +486,6 @@ ${staffs.length
                     '❌ Ocorreu um erro ao carregar a equipe.',
                 ephemeral: true
             });
-
         }
 
     }
@@ -505,7 +494,7 @@ ${staffs.length
 
 
 // ======================================================
-// ❌ ERROS DO BOT
+// ❌ ERROS
 // ======================================================
 
 client.on('error', error => {
