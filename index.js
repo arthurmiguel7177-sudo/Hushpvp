@@ -37,7 +37,7 @@ const REVIEW_LOG_CHANNEL_ID =
     '1545956902826151956';
 
 
-// Jogadores respondendo formulário
+// Usuários preenchendo candidatura
 const applicationsInProgress = new Set();
 
 
@@ -74,7 +74,7 @@ app.listen(PORT, () => {
 
 
 // ======================================================
-// 🤖 CLIENT DISCORD
+// 🤖 CLIENTE DISCORD
 // ======================================================
 
 const client = new Client({
@@ -103,7 +103,7 @@ const client = new Client({
 
 
 // ======================================================
-// ⚔️ COMANDO /TEAM
+// ⚔️ COMANDOS
 // ======================================================
 
 const teamCommand =
@@ -114,6 +114,53 @@ const teamCommand =
         .setDescription(
             'Mostra a equipe oficial do HushPvP'
         );
+
+
+const statusOnCommand =
+    new SlashCommandBuilder()
+
+        .setName('statuson')
+
+        .setDescription(
+            'Mostra que o servidor Minecraft está ONLINE'
+        );
+
+
+const statusOffCommand =
+    new SlashCommandBuilder()
+
+        .setName('statusoff')
+
+        .setDescription(
+            'Mostra que o servidor Minecraft está OFFLINE'
+        );
+
+
+// ======================================================
+// 🛡️ FUNÇÃO DE PERMISSÃO
+// ======================================================
+
+function hasAdminPermission(member) {
+
+    const allowedRoles = [
+        'owner',
+        'owners',
+        'admin',
+        'admins',
+        'administrator'
+    ];
+
+
+    return member.roles.cache.some(
+
+        role =>
+            allowedRoles.includes(
+                role.name.toLowerCase()
+            )
+
+    );
+
+}
 
 
 // ======================================================
@@ -144,7 +191,7 @@ async function sendRecruitmentPanel() {
 
 
         // ==============================================
-        // 🧹 APAGAR PAINEL ANTIGO DO BOT
+        // 🧹 APAGAR PAINÉIS ANTIGOS DO BOT
         // ==============================================
 
         try {
@@ -157,9 +204,11 @@ async function sendRecruitmentPanel() {
 
             const botMessages =
                 messages.filter(
+
                     message =>
                         message.author.id ===
                         client.user.id
+
                 );
 
 
@@ -236,7 +285,7 @@ Você está prestes a iniciar sua candidatura para fazer parte da equipe do **Hu
 • Não envie várias candidaturas
 • Mantenha suas mensagens privadas ativadas
 • Leve o recrutamento a sério
-• Não envie senhas ou informações pessoais
+• Não envie senhas ou informações pessoais sensíveis
 
 ### ✅ Requisitos básicos
 
@@ -310,7 +359,7 @@ client.once(
 
 
         // ==============================================
-        // 🎮 STATUS
+        // 🎮 STATUS DO BOT
         // ==============================================
 
         client.user.setPresence({
@@ -336,7 +385,7 @@ client.once(
 
 
         // ==============================================
-        // ⚔️ REGISTRAR /TEAM
+        // ⚔️ REGISTRAR COMANDOS
         // ==============================================
 
         try {
@@ -349,20 +398,24 @@ client.once(
 
             await guild.commands.set([
 
-                teamCommand.toJSON()
+                teamCommand.toJSON(),
+
+                statusOnCommand.toJSON(),
+
+                statusOffCommand.toJSON()
 
             ]);
 
 
             console.log(
-                '✅ /team registrado!'
+                '✅ Comandos registrados!'
             );
 
 
         } catch (error) {
 
             console.error(
-                '❌ Erro ao registrar /team:',
+                '❌ Erro ao registrar comandos:',
                 error
             );
 
@@ -370,10 +423,12 @@ client.once(
 
 
         // ==============================================
-        // 🔊 ENTRAR NO CANAL DE VOZ
+        // 🔊 CANAL DE VOZ
         // ==============================================
 
-        if (process.env.CHANNEL_ID) {
+        if (
+            process.env.CHANNEL_ID
+        ) {
 
             try {
 
@@ -428,7 +483,7 @@ client.once(
 
 
         // ==============================================
-        // 📜 PAINEL DE REGRAS
+        // 📜 REGRAS
         // ==============================================
 
         if (
@@ -450,7 +505,6 @@ client.once(
                 ) {
 
 
-                    // Apaga mensagens antigas
                     try {
 
                         const messages =
@@ -609,7 +663,7 @@ client.once(
 
 
         // ==============================================
-        // 📝 PAINEL DE RECRUTAMENTO
+        // 📝 RECRUTAMENTO
         // ==============================================
 
         await sendRecruitmentPanel();
@@ -706,34 +760,28 @@ client.on(
 
             const owners =
                 ownerRole
-                    ? ownerRole
-                        .members
-                        .map(
-                            member =>
-                                `• ${member}`
-                        )
+                    ? ownerRole.members.map(
+                        member =>
+                            `• ${member}`
+                    )
                     : [];
 
 
             const admins =
                 adminRole
-                    ? adminRole
-                        .members
-                        .map(
-                            member =>
-                                `• ${member}`
-                        )
+                    ? adminRole.members.map(
+                        member =>
+                            `• ${member}`
+                    )
                     : [];
 
 
             const staffs =
                 staffRole
-                    ? staffRole
-                        .members
-                        .map(
-                            member =>
-                                `• ${member}`
-                        )
+                    ? staffRole.members.map(
+                        member =>
+                            `• ${member}`
+                    )
                     : [];
 
 
@@ -791,7 +839,168 @@ ${staffs.length ? staffs.join('\n') : '• Nenhum membro'}
 
 
 // ======================================================
-// 📝 BOTÃO DE RECRUTAMENTO
+// 🟢 /STATUSON E 🔴 /STATUSOFF
+// ======================================================
+
+client.on(
+    'interactionCreate',
+    async interaction => {
+
+        if (
+            !interaction.isChatInputCommand()
+        ) return;
+
+
+        if (
+            interaction.commandName !==
+                'statuson' &&
+            interaction.commandName !==
+                'statusoff'
+        ) return;
+
+
+        // ==============================================
+        // 🛡️ PERMISSÃO
+        // ==============================================
+
+        if (
+            !hasAdminPermission(
+                interaction.member
+            )
+        ) {
+
+            await interaction.reply({
+
+                content:
+                    '❌ Apenas Owner ou Admin pode alterar o status do servidor.',
+
+                ephemeral:
+                    true
+
+            });
+
+
+            return;
+        }
+
+
+        // ==============================================
+        // 🟢 ONLINE
+        // ==============================================
+
+        if (
+            interaction.commandName ===
+            'statuson'
+        ) {
+
+            const container =
+                new ContainerBuilder()
+
+                    .setAccentColor(
+                        0x00FF7F
+                    )
+
+                    .addTextDisplayComponents(
+
+                        new TextDisplayBuilder()
+                            .setContent(
+`# 🟢 HUSHPVP STATUS
+
+## ✅ SERVIDOR ONLINE
+
+O servidor de Minecraft do **HushPvP** está ligado e disponível.
+
+🎮 **Status:** \`ONLINE\`
+
+⚡ O servidor está pronto para receber jogadores.
+
+> 🐺 HushPvP • Server Status`
+                            )
+
+                    );
+
+
+            await interaction.reply({
+
+                components: [
+                    container
+                ],
+
+                flags:
+                    MessageFlags
+                        .IsComponentsV2
+
+            });
+
+
+            console.log(
+                `🟢 Minecraft ONLINE por ${interaction.user.tag}`
+            );
+
+        }
+
+
+        // ==============================================
+        // 🔴 OFFLINE
+        // ==============================================
+
+        if (
+            interaction.commandName ===
+            'statusoff'
+        ) {
+
+            const container =
+                new ContainerBuilder()
+
+                    .setAccentColor(
+                        0xFF0000
+                    )
+
+                    .addTextDisplayComponents(
+
+                        new TextDisplayBuilder()
+                            .setContent(
+`# 🔴 HUSHPVP STATUS
+
+## ❌ SERVIDOR OFFLINE
+
+O servidor de Minecraft do **HushPvP** está desligado ou indisponível no momento.
+
+🎮 **Status:** \`OFFLINE\`
+
+🔧 Aguarde até o servidor voltar.
+
+> 🐺 HushPvP • Server Status`
+                            )
+
+                    );
+
+
+            await interaction.reply({
+
+                components: [
+                    container
+                ],
+
+                flags:
+                    MessageFlags
+                        .IsComponentsV2
+
+            });
+
+
+            console.log(
+                `🔴 Minecraft OFFLINE por ${interaction.user.tag}`
+            );
+
+        }
+
+    }
+);
+
+
+// ======================================================
+// 📝 BOTÃO RECRUTAMENTO
 // ======================================================
 
 client.on(
@@ -814,7 +1023,7 @@ client.on(
 
 
         // ==============================================
-        // 🚫 JÁ ESTÁ RESPONDENDO
+        // 🚫 CANDIDATURA EM ANDAMENTO
         // ==============================================
 
         if (
@@ -832,16 +1041,18 @@ client.on(
 
             });
 
+
             return;
+
         }
 
 
-        // ==============================================
-        // 📩 CRIAR DM
-        // ==============================================
-
         let dm;
 
+
+        // ==============================================
+        // 📩 DM
+        // ==============================================
 
         try {
 
@@ -860,7 +1071,7 @@ Vou fazer algumas perguntas para você.
 
 Responda uma por uma com calma e sinceridade.
 
-> Digite **cancelar** a qualquer momento para encerrar sua candidatura.
+> Digite **cancelar** a qualquer momento para cancelar sua candidatura.
 
 Boa sorte! ⚔️`
             );
@@ -871,12 +1082,13 @@ Boa sorte! ⚔️`
             await interaction.reply({
 
                 content:
-                    '❌ Não consegui enviar uma DM para você. Ative suas mensagens privadas e tente novamente.',
+                    '❌ Não consegui enviar uma mensagem privada. Ative suas DMs e tente novamente.',
 
                 ephemeral:
                     true
 
             });
+
 
             return;
 
@@ -956,18 +1168,14 @@ Exemplos:
 
                         filter:
                             message =>
-                                message
-                                    .author
-                                    .id ===
+                                message.author.id ===
                                 user.id,
 
                         max:
                             1,
 
                         time:
-                            5 *
-                            60 *
-                            1000,
+                            5 * 60 * 1000,
 
                         errors:
                             ['time']
@@ -987,12 +1195,9 @@ Exemplos:
                 // ==========================================
 
                 if (
-                    answer
-                        .toLowerCase() ===
+                    answer.toLowerCase() ===
                         'cancel' ||
-
-                    answer
-                        .toLowerCase() ===
+                    answer.toLowerCase() ===
                         'cancelar'
                 ) {
 
@@ -1031,7 +1236,7 @@ Você poderá tentar novamente quando quiser.
 
 
             // ==============================================
-            // 💾 SALVAR CANDIDATURA
+            // 💾 SALVAR
             // ==============================================
 
             applications.set(
@@ -1142,10 +1347,6 @@ Você poderá tentar novamente quando quiser.
                     );
 
 
-            // ==============================================
-            // 📋 PAINEL DA CANDIDATURA
-            // ==============================================
-
             const applicationContainer =
                 new ContainerBuilder()
 
@@ -1218,15 +1419,10 @@ ${answers[6]}
                 ],
 
                 flags:
-                    MessageFlags
-                        .IsComponentsV2
+                    MessageFlags.IsComponentsV2
 
             });
 
-
-            // ==============================================
-            // ✅ CONFIRMAÇÃO NA DM
-            // ==============================================
 
             await dm.send(
 `# ✅ CANDIDATURA ENVIADA
@@ -1254,7 +1450,7 @@ Você receberá o resultado aqui mesmo pela sua DM.
                 await dm.send(
 `# ⏰ CANDIDATURA ENCERRADA
 
-Você demorou muito para responder ou ocorreu um erro durante o recrutamento.
+Você demorou muito para responder ou ocorreu algum erro.
 
 Você poderá iniciar uma nova candidatura quando estiver pronto.
 
@@ -1289,16 +1485,14 @@ client.on(
 
 
         const isAccept =
-            interaction
-                .customId
+            interaction.customId
                 .startsWith(
                     'application_accept_'
                 );
 
 
         const isReject =
-            interaction
-                .customId
+            interaction.customId
                 .startsWith(
                     'application_reject_'
                 );
@@ -1314,37 +1508,10 @@ client.on(
         // 🛡️ PERMISSÃO
         // ==============================================
 
-        const allowedRoles = [
-
-            'owner',
-            'owners',
-            'admin',
-            'admins',
-            'administrator'
-
-        ];
-
-
-        const hasPermission =
-            interaction
-                .member
-                .roles
-                .cache
-                .some(
-
-                    role =>
-                        allowedRoles
-                            .includes(
-                                role
-                                    .name
-                                    .toLowerCase()
-                            )
-
-                );
-
-
         if (
-            !hasPermission
+            !hasAdminPermission(
+                interaction.member
+            )
         ) {
 
             await interaction.reply({
@@ -1364,12 +1531,11 @@ client.on(
 
 
         // ==============================================
-        // 👤 ID CANDIDATO
+        // 👤 ID DO CANDIDATO
         // ==============================================
 
         const userId =
-            interaction
-                .customId
+            interaction.customId
 
                 .replace(
                     'application_accept_',
@@ -1403,7 +1569,7 @@ client.on(
                 await interaction.reply({
 
                     content:
-                        '❌ Não encontrei os dados dessa candidatura. Talvez o bot tenha reiniciado desde que ela foi enviada.',
+                        '❌ Não encontrei os dados dessa candidatura. Talvez o bot tenha reiniciado.',
 
                     ephemeral:
                         true
@@ -1425,28 +1591,19 @@ client.on(
                 `https://mc-heads.net/avatar/${encodeURIComponent(minecraftNick)}/128`;
 
 
-            // ==============================================
-            // 📢 CANAL DE REVIEWS
-            // ==============================================
-
             const reviewLogChannel =
                 await client.channels.fetch(
                     REVIEW_LOG_CHANNEL_ID
                 );
 
 
-            // ==================================================
+            // ==============================================
             // ✅ ACEITAR
-            // ==================================================
+            // ==============================================
 
             if (
                 isAccept
             ) {
-
-
-                // ==========================================
-                // 📩 DM DO CANDIDATO
-                // ==========================================
 
                 try {
 
@@ -1457,11 +1614,11 @@ Parabéns ${candidate}!
 
 Sua candidatura para entrar na equipe do **HushPvP** foi **ACEITA**. ✅
 
-🎮 **Nick no Minecraft:** ${minecraftNick}
+🎮 **Nick:** ${minecraftNick}
 
-🛡️ **Cargo solicitado:** ${application.position}
+🛡️ **Cargo:** ${application.position}
 
-Um administrador entrará em contato com você para informar os próximos passos.
+Um administrador entrará em contato com você.
 
 Bem-vindo à equipe! 🐺⚔️
 
@@ -1470,10 +1627,6 @@ Bem-vindo à equipe! 🐺⚔️
 
                 } catch {}
 
-
-                // ==========================================
-                // ✅ ATUALIZA A CANDIDATURA
-                // ==========================================
 
                 const acceptedContainer =
                     new ContainerBuilder()
@@ -1528,10 +1681,6 @@ Bem-vindo à equipe! 🐺⚔️
                 });
 
 
-                // ==========================================
-                // ⭐ LOG NO CANAL DE REVIEWS
-                // ==========================================
-
                 if (
                     reviewLogChannel &&
                     reviewLogChannel
@@ -1569,9 +1718,9 @@ Bem-vindo à equipe! 🐺⚔️
 
 🎮 **Minecraft:** ${minecraftNick}
 
-🛡️ **Cargo:** ${application.position}
-
 🎂 **Idade:** ${application.age}
+
+🛡️ **Cargo:** ${application.position}
 
 👮 **Aceito por:** ${interaction.user}
 
@@ -1590,33 +1739,22 @@ Bem-vindo à equipe! 🐺⚔️
                         ],
 
                         flags:
-                            MessageFlags
-                                .IsComponentsV2
+                            MessageFlags.IsComponentsV2
 
                     });
 
                 }
 
-
-                console.log(
-                    `✅ ${candidate.tag} foi aceito por ${interaction.user.tag}`
-                );
-
             }
 
 
-            // ==================================================
+            // ==============================================
             // ❌ REJEITAR
-            // ==================================================
+            // ==============================================
 
             if (
                 isReject
             ) {
-
-
-                // ==========================================
-                // 📩 DM
-                // ==========================================
 
                 try {
 
@@ -1629,9 +1767,9 @@ Obrigado pelo interesse em fazer parte da equipe do **HushPvP**.
 
 Após analisarmos sua candidatura, infelizmente ela **não foi aprovada desta vez**.
 
-🎮 **Nick no Minecraft:** ${minecraftNick}
+🎮 **Nick:** ${minecraftNick}
 
-🛡️ **Cargo solicitado:** ${application.position}
+🛡️ **Cargo:** ${application.position}
 
 Você poderá tentar novamente em outra oportunidade.
 
@@ -1640,10 +1778,6 @@ Você poderá tentar novamente em outra oportunidade.
 
                 } catch {}
 
-
-                // ==========================================
-                // ❌ ATUALIZAR PAINEL
-                // ==========================================
 
                 const rejectedContainer =
                     new ContainerBuilder()
@@ -1698,10 +1832,6 @@ Você poderá tentar novamente em outra oportunidade.
                 });
 
 
-                // ==========================================
-                // ⭐ REVIEW LOG
-                // ==========================================
-
                 if (
                     reviewLogChannel &&
                     reviewLogChannel
@@ -1739,9 +1869,9 @@ Você poderá tentar novamente em outra oportunidade.
 
 🎮 **Minecraft:** ${minecraftNick}
 
-🛡️ **Cargo:** ${application.position}
-
 🎂 **Idade:** ${application.age}
+
+🛡️ **Cargo:** ${application.position}
 
 👮 **Rejeitado por:** ${interaction.user}
 
@@ -1760,24 +1890,14 @@ Você poderá tentar novamente em outra oportunidade.
                         ],
 
                         flags:
-                            MessageFlags
-                                .IsComponentsV2
+                            MessageFlags.IsComponentsV2
 
                     });
 
                 }
 
-
-                console.log(
-                    `❌ ${candidate.tag} foi rejeitado por ${interaction.user.tag}`
-                );
-
             }
 
-
-            // ==============================================
-            // 🧹 REMOVER DA MEMÓRIA
-            // ==============================================
 
             applications.delete(
                 userId
