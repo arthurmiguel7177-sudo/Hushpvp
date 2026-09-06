@@ -77,7 +77,7 @@ const teamCommand = new SlashCommandBuilder()
 
 
 // ======================================================
-// 📝 FUNÇÃO DO PAINEL DE RECRUTAMENTO
+// 📝 PAINEL DE RECRUTAMENTO
 // ======================================================
 
 async function sendRecruitmentPanel() {
@@ -89,30 +89,22 @@ async function sendRecruitmentPanel() {
         );
 
         if (!channel || !channel.isTextBased()) {
-            console.log(
-                '❌ Canal de recrutamento inválido.'
-            );
+            console.log('❌ Canal de recrutamento inválido.');
             return;
         }
 
 
-        // ==================================================
-        // 🧹 APAGAR PAINEL ANTIGO
-        // ==================================================
-
+        // APAGAR PAINEL ANTIGO DO BOT
         try {
 
-            const messages =
-                await channel.messages.fetch({
-                    limit: 20
-                });
+            const messages = await channel.messages.fetch({
+                limit: 20
+            });
 
-            const botMessages =
-                messages.filter(
-                    message =>
-                        message.author.id ===
-                        client.user.id
-                );
+            const botMessages = messages.filter(
+                message =>
+                    message.author.id === client.user.id
+            );
 
             for (const message of botMessages.values()) {
                 await message.delete().catch(() => {});
@@ -121,99 +113,69 @@ async function sendRecruitmentPanel() {
         } catch {}
 
 
-        // ==================================================
-        // 🔘 BOTÃO APPLY
-        // ==================================================
-
-        const applyButton =
-            new ButtonBuilder()
-
-                .setCustomId(
-                    'hushpvp_apply'
-                )
-
-                .setLabel(
-                    'Submit Application'
-                )
-
-                .setEmoji('📝')
-
-                .setStyle(
-                    ButtonStyle.Primary
-                );
+        // BOTÃO
+        const applyButton = new ButtonBuilder()
+            .setCustomId('hushpvp_apply')
+            .setLabel('Enviar candidatura')
+            .setEmoji('📝')
+            .setStyle(ButtonStyle.Primary);
 
 
-        const row =
-            new ActionRowBuilder()
-                .addComponents(
-                    applyButton
-                );
+        const row = new ActionRowBuilder()
+            .addComponents(applyButton);
 
 
-        // ==================================================
-        // 📦 PAINEL
-        // ==================================================
+        // PAINEL
+        const recruitmentContainer = new ContainerBuilder()
 
-        const recruitmentContainer =
-            new ContainerBuilder()
+            .setAccentColor(0x009DFF)
 
-                .setAccentColor(
-                    0x009DFF
-                )
+            .addTextDisplayComponents(
+                new TextDisplayBuilder()
+                    .setContent(
+`# 📝 RECRUTAMENTO HUSHPVP
 
-                .addTextDisplayComponents(
-                    new TextDisplayBuilder()
-                        .setContent(
-`# 📝 HUSHPVP APPLICATIONS
+## Processo de Recrutamento — Equipe HushPvP
 
-## Recruitment Process — HushPvP Team
+Bem-vindo!
 
-Welcome!
+Você está prestes a iniciar sua candidatura para entrar na equipe do **HushPvP**.
 
-You are starting your application for the **HushPvP Staff Team**.
+Leia as informações abaixo antes de continuar.
 
-Please read the instructions carefully before proceeding.
+### 📌 Informações Importantes
 
-### 📌 Important Guidelines
+• Responda todas as perguntas com sinceridade
+• Não envie várias candidaturas
+• Mantenha suas mensagens privadas ativadas
+• Leve o recrutamento a sério
+• Nunca envie senhas ou informações pessoais sensíveis
 
-• Be honest in all your answers
-• Do not spam applications
-• Keep your Discord DMs enabled
-• Applications must be taken seriously
-• Never send passwords or sensitive information
+### ✅ Requisitos Básicos
 
-### ✅ Basic Requirements
+• Ter boa comunicação
+• Saber respeitar jogadores e membros da equipe
+• Ter maturidade
+• Ser ativo na comunidade
+• Saber trabalhar em equipe
+• Ter compromisso com o HushPvP
 
-• Good communication skills
-• Respectful attitude
-• Maturity
-• Activity within the community
-• Ability to work as a team
-• Commitment to HushPvP
+📩 **Clique no botão abaixo para iniciar sua candidatura pela DM.**
 
-📩 **Click the button below to begin your private application.**
+> 🐺 HushPvP • Recrutamento Oficial`
+                    )
+            )
 
-> 🐺 HushPvP • Official Recruitment`
-                        )
-                )
-
-                .addActionRowComponents(
-                    row
-                );
+            .addActionRowComponents(row);
 
 
         await channel.send({
-            components: [
-                recruitmentContainer
-            ],
-            flags:
-                MessageFlags.IsComponentsV2
+            components: [recruitmentContainer],
+            flags: MessageFlags.IsComponentsV2
         });
 
 
-        console.log(
-            '✅ Painel de recrutamento enviado!'
-        );
+        console.log('✅ Painel de recrutamento enviado!');
 
 
     } catch (error) {
@@ -222,6 +184,7 @@ Please read the instructions carefully before proceeding.
             '❌ Erro no painel de recrutamento:',
             error
         );
+
     }
 
 }
@@ -234,9 +197,7 @@ Please read the instructions carefully before proceeding.
 client.once('ready', async () => {
 
     console.log('======================================');
-    console.log(
-        `🐺 HushPvP online como ${client.user.tag}`
-    );
+    console.log(`🐺 HushPvP online como ${client.user.tag}`);
     console.log('======================================');
 
 
@@ -247,14 +208,11 @@ client.once('ready', async () => {
     client.user.setPresence({
         activities: [
             {
-                name:
-                    'HushPvP ⚔️',
-                type:
-                    ActivityType.Playing
+                name: 'HushPvP ⚔️',
+                type: ActivityType.Playing
             }
         ],
-        status:
-            'online'
+        status: 'online'
     });
 
 
@@ -264,18 +222,15 @@ client.once('ready', async () => {
 
     try {
 
-        const guild =
-            await client.guilds.fetch(
-                GUILD_ID
-            );
+        const guild = await client.guilds.fetch(
+            GUILD_ID
+        );
 
         await guild.commands.set([
             teamCommand.toJSON()
         ]);
 
-        console.log(
-            '✅ /team registrado!'
-        );
+        console.log('✅ /team registrado!');
 
     } catch (error) {
 
@@ -283,6 +238,7 @@ client.once('ready', async () => {
             '❌ Erro ao registrar /team:',
             error
         );
+
     }
 
 
@@ -303,25 +259,22 @@ client.once('ready', async () => {
         ) {
 
             joinVoiceChannel({
-                channelId:
-                    voiceChannel.id,
-
-                guildId:
-                    voiceChannel.guild.id,
-
+                channelId: voiceChannel.id,
+                guildId: voiceChannel.guild.id,
                 adapterCreator:
-                    voiceChannel.guild
-                        .voiceAdapterCreator,
-
-                selfDeaf:
-                    true,
-
-                selfMute:
-                    false
+                    voiceChannel.guild.voiceAdapterCreator,
+                selfDeaf: true,
+                selfMute: false
             });
 
             console.log(
                 `🔊 Conectado em ${voiceChannel.name}`
+            );
+
+        } else {
+
+            console.log(
+                '❌ Canal de voz inválido.'
             );
 
         }
@@ -332,6 +285,7 @@ client.once('ready', async () => {
             '❌ Erro no canal de voz:',
             error
         );
+
     }
 
 
@@ -358,9 +312,7 @@ client.once('ready', async () => {
                         limit: 100
                     });
 
-                if (
-                    messages.size > 0
-                ) {
+                if (messages.size > 0) {
 
                     await rulesChannel.bulkDelete(
                         messages,
@@ -376,8 +328,7 @@ client.once('ready', async () => {
                 new AttachmentBuilder(
                     './regras.png',
                     {
-                        name:
-                            'regras.png'
+                        name: 'regras.png'
                     }
                 );
 
@@ -464,12 +415,8 @@ client.once('ready', async () => {
 
 
             await rulesChannel.send({
-                components: [
-                    rulesContainer
-                ],
-                files: [
-                    banner
-                ],
+                components: [rulesContainer],
+                files: [banner],
                 flags:
                     MessageFlags.IsComponentsV2
             });
@@ -487,6 +434,7 @@ client.once('ready', async () => {
             '❌ Erro nas regras:',
             error
         );
+
     }
 
 
@@ -503,711 +451,755 @@ client.once('ready', async () => {
 // ⚔️ /TEAM
 // ======================================================
 
-client.on(
-    'interactionCreate',
-    async interaction => {
+client.on('interactionCreate', async interaction => {
 
-        if (
-            !interaction.isChatInputCommand()
-        ) return;
+    if (!interaction.isChatInputCommand()) return;
 
-        if (
-            interaction.commandName !==
-            'team'
-        ) return;
+    if (interaction.commandName !== 'team') return;
 
 
-        try {
+    try {
 
-            await interaction.guild.members.fetch();
+        await interaction.guild.members.fetch();
 
 
-            const ownerRole =
-                interaction.guild.roles.cache.find(
-                    role =>
-                        [
-                            'owner',
-                            'owners'
-                        ].includes(
-                            role.name.toLowerCase()
-                        )
-                );
-
-
-            const adminRole =
-                interaction.guild.roles.cache.find(
-                    role =>
-                        [
-                            'admin',
-                            'admins',
-                            'administrator'
-                        ].includes(
-                            role.name.toLowerCase()
-                        )
-                );
-
-
-            const staffRole =
-                interaction.guild.roles.cache.find(
-                    role =>
-                        [
-                            'staff',
-                            'staffs'
-                        ].includes(
-                            role.name.toLowerCase()
-                        )
-                );
-
-
-            const owners =
-                ownerRole
-                    ? ownerRole.members.map(
-                        member =>
-                            `• ${member}`
-                    )
-                    : [];
-
-
-            const admins =
-                adminRole
-                    ? adminRole.members.map(
-                        member =>
-                            `• ${member}`
-                    )
-                    : [];
-
-
-            const staffs =
-                staffRole
-                    ? staffRole.members.map(
-                        member =>
-                            `• ${member}`
-                    )
-                    : [];
-
-
-            const teamContainer =
-                new ContainerBuilder()
-
-                    .setAccentColor(
-                        0x009DFF
-                    )
-
-                    .addTextDisplayComponents(
-                        new TextDisplayBuilder()
-                            .setContent(
-`# 🐺 HUSHPVP TEAM
-
-# 👑 OWNER
-${owners.length ? owners.join('\n') : '• No members'}
-
-# 🛡️ ADMIN
-${admins.length ? admins.join('\n') : '• No members'}
-
-# ⚔️ STAFF
-${staffs.length ? staffs.join('\n') : '• No members'}
-
-> 💙 HushPvP • Official Staff Team`
-                            )
-                    );
-
-
-            await interaction.reply({
-                components: [
-                    teamContainer
-                ],
-                flags:
-                    MessageFlags.IsComponentsV2
-            });
-
-
-        } catch (error) {
-
-            console.error(
-                '❌ Erro no /team:',
-                error
-            );
-
-        }
-
-    }
-);
-
-
-// ======================================================
-// 📝 BOTÃO APPLY
-// ======================================================
-
-client.on(
-    'interactionCreate',
-    async interaction => {
-
-        if (
-            !interaction.isButton()
-        ) return;
-
-        if (
-            interaction.customId !==
-            'hushpvp_apply'
-        ) return;
-
-
-        const user =
-            interaction.user;
-
-
-        if (
-            applicationsInProgress.has(
-                user.id
-            )
-        ) {
-
-            await interaction.reply({
-                content:
-                    '⚠️ Você já possui uma candidatura em andamento na DM.',
-                ephemeral:
-                    true
-            });
-
-            return;
-        }
-
-
-        let dm;
-
-
-        try {
-
-            dm =
-                await user.createDM();
-
-            await dm.send(
-`# 🐺 HUSHPVP RECRUITMENT
-
-Hello ${user}!
-
-Welcome to the **HushPvP Staff Recruitment Process**.
-
-I will ask you a few questions.
-
-Please answer them one by one.
-
-> Type **cancel** at any moment to cancel your application.
-
-Let's begin! ⚔️`
-            );
-
-
-        } catch {
-
-            await interaction.reply({
-                content:
-                    '❌ Não consegui mandar DM. Ative suas mensagens privadas e tente novamente.',
-                ephemeral:
-                    true
-            });
-
-            return;
-        }
-
-
-        await interaction.reply({
-            content:
-                '📩 Te mandei uma DM! Continue seu recrutamento no privado.',
-            ephemeral:
-                true
-        });
-
-
-        applicationsInProgress.add(
-            user.id
-        );
-
-
-        const questions = [
-
-            '🎮 **1/7 — What is your Minecraft nickname?**',
-
-            '🎂 **2/7 — How old are you?**',
-
-            `🛡️ **3/7 — Which position are you applying for?**
-
-• Staff
-• Admin
-• Moderator
-• Builder
-• Developer`,
-
-            `📋 **4/7 — Do you have previous staff experience?**
-
-Tell us which servers and positions.`,
-
-            `⏰ **5/7 — How active can you be?**
-
-Example:
-• 2 hours/day
-• 4 hours/day
-• Weekends`,
-
-            '🤝 **6/7 — Why do you want to join HushPvP?**',
-
-            '⭐ **7/7 — Why should we choose you?**'
-
-        ];
-
-
-        const answers = [];
-
-
-        try {
-
-            for (
-                let i = 0;
-                i < questions.length;
-                i++
-            ) {
-
-                await dm.send(
-                    questions[i]
-                );
-
-
-                const collected =
-                    await dm.awaitMessages({
-
-                        filter:
-                            message =>
-                                message.author.id ===
-                                user.id,
-
-                        max:
-                            1,
-
-                        time:
-                            5 * 60 * 1000,
-
-                        errors:
-                            ['time']
-
-                    });
-
-
-                const answer =
-                    collected
-                        .first()
-                        .content
-                        .trim();
-
-
-                if (
-                    answer.toLowerCase() ===
-                    'cancel'
-                ) {
-
-                    await dm.send(
-`❌ **Application cancelled.**
-
-You can apply again later.`
-                    );
-
-                    applicationsInProgress.delete(
-                        user.id
-                    );
-
-                    return;
-                }
-
-
-                answers.push(
-                    answer
-                );
-
-
-                await dm.send(
-                    '✅ Answer saved!'
-                );
-
-            }
-
-
-            // ==================================================
-            // 📤 ENVIAR PARA STAFF
-            // ==================================================
-
-            const reviewChannel =
-                await client.channels.fetch(
-                    APPLICATION_REVIEW_CHANNEL_ID
-                );
-
-
-            const acceptButton =
-                new ButtonBuilder()
-
-                    .setCustomId(
-                        `application_accept_${user.id}`
-                    )
-
-                    .setLabel(
-                        'Accept'
-                    )
-
-                    .setEmoji('✅')
-
-                    .setStyle(
-                        ButtonStyle.Success
-                    );
-
-
-            const rejectButton =
-                new ButtonBuilder()
-
-                    .setCustomId(
-                        `application_reject_${user.id}`
-                    )
-
-                    .setLabel(
-                        'Reject'
-                    )
-
-                    .setEmoji('❌')
-
-                    .setStyle(
-                        ButtonStyle.Danger
-                    );
-
-
-            const buttons =
-                new ActionRowBuilder()
-                    .addComponents(
-                        acceptButton,
-                        rejectButton
-                    );
-
-
-            const applicationContainer =
-                new ContainerBuilder()
-
-                    .setAccentColor(
-                        0x009DFF
-                    )
-
-                    .addTextDisplayComponents(
-                        new TextDisplayBuilder()
-                            .setContent(
-`# 📋 NEW STAFF APPLICATION
-
-## 👤 Candidate
-${user}
-
-**Discord:** ${user.tag}
-**User ID:** \`${user.id}\`
-
-## 🎮 Minecraft Nick
-${answers[0]}
-
-## 🎂 Age
-${answers[1]}
-
-## 🛡️ Position
-${answers[2]}
-
-## 📋 Previous Experience
-${answers[3]}
-
-## ⏰ Availability
-${answers[4]}
-
-## 🤝 Why HushPvP?
-${answers[5]}
-
-## ⭐ Why should we choose you?
-${answers[6]}
-
-> 🐺 HushPvP Recruitment System`
-                            )
-                    )
-
-                    .addActionRowComponents(
-                        buttons
-                    );
-
-
-            await reviewChannel.send({
-                components: [
-                    applicationContainer
-                ],
-                flags:
-                    MessageFlags.IsComponentsV2
-            });
-
-
-            await dm.send(
-`# ✅ APPLICATION SUBMITTED
-
-Your application has been sent to the **HushPvP Staff Team**.
-
-You will receive the result here in your DMs.
-
-> 🐺 HushPvP Recruitment`
-            );
-
-
-        } catch {
-
-            try {
-
-                await dm.send(
-`# ⏰ APPLICATION EXPIRED
-
-You took too long to answer.
-
-You can apply again whenever you're ready.`
-                );
-
-            } catch {}
-
-        }
-
-
-        applicationsInProgress.delete(
-            user.id
-        );
-
-    }
-);
-
-
-// ======================================================
-// ✅ ACCEPT / ❌ REJECT
-// ======================================================
-
-client.on(
-    'interactionCreate',
-    async interaction => {
-
-        if (
-            !interaction.isButton()
-        ) return;
-
-
-        const isAccept =
-            interaction.customId.startsWith(
-                'application_accept_'
-            );
-
-        const isReject =
-            interaction.customId.startsWith(
-                'application_reject_'
-            );
-
-
-        if (
-            !isAccept &&
-            !isReject
-        ) return;
-
-
-        const allowedRoles = [
-            'owner',
-            'owners',
-            'admin',
-            'admins',
-            'administrator'
-        ];
-
-
-        const hasPermission =
-            interaction.member.roles.cache.some(
+        const ownerRole =
+            interaction.guild.roles.cache.find(
                 role =>
-                    allowedRoles.includes(
+                    [
+                        'owner',
+                        'owners'
+                    ].includes(
                         role.name.toLowerCase()
                     )
             );
 
 
-        if (
-            !hasPermission
-        ) {
-
-            await interaction.reply({
-                content:
-                    '❌ Apenas Owner/Admin pode analisar candidaturas.',
-                ephemeral:
-                    true
-            });
-
-            return;
-        }
-
-
-        const userId =
-            interaction.customId
-
-                .replace(
-                    'application_accept_',
-                    ''
-                )
-
-                .replace(
-                    'application_reject_',
-                    ''
-                );
-
-
-        try {
-
-            const candidate =
-                await client.users.fetch(
-                    userId
-                );
-
-
-            // ==================================================
-            // ✅ ACCEPT
-            // ==================================================
-
-            if (
-                isAccept
-            ) {
-
-                try {
-
-                    await candidate.send(
-`# 🎉 APPLICATION ACCEPTED!
-
-Congratulations!
-
-Your application to join the **HushPvP Staff Team** has been **ACCEPTED**. ✅
-
-An administrator will contact you with the next steps.
-
-Welcome to the team! 🐺⚔️
-
-> HushPvP • Staff Recruitment`
-                    );
-
-                } catch {}
-
-
-                const acceptedContainer =
-                    new ContainerBuilder()
-
-                        .setAccentColor(
-                            0x00FF7F
-                        )
-
-                        .addTextDisplayComponents(
-                            new TextDisplayBuilder()
-                                .setContent(
-`# ✅ APPLICATION ACCEPTED
-
-👤 **Candidate:** ${candidate}
-
-🛡️ **Reviewed by:** ${interaction.user}
-
-## 🎉 RESULT
-**ACCEPTED**
-
-> 🐺 HushPvP Recruitment`
-                                )
-                        );
-
-
-                await interaction.update({
-                    components: [
-                        acceptedContainer
-                    ]
-                });
-
-            }
-
-
-            // ==================================================
-            // ❌ REJECT
-            // ==================================================
-
-            if (
-                isReject
-            ) {
-
-                try {
-
-                    await candidate.send(
-`# ❌ APPLICATION RESULT
-
-Thank you for your interest in joining the **HushPvP Staff Team**.
-
-Unfortunately, your application was **not accepted at this time**.
-
-You may have another opportunity in the future.
-
-> 🐺 HushPvP • Staff Recruitment`
-                    );
-
-                } catch {}
-
-
-                const rejectedContainer =
-                    new ContainerBuilder()
-
-                        .setAccentColor(
-                            0xFF0000
-                        )
-
-                        .addTextDisplayComponents(
-                            new TextDisplayBuilder()
-                                .setContent(
-`# ❌ APPLICATION REJECTED
-
-👤 **Candidate:** ${candidate}
-
-🛡️ **Reviewed by:** ${interaction.user}
-
-## RESULT
-**REJECTED**
-
-> 🐺 HushPvP Recruitment`
-                                )
-                        );
-
-
-                await interaction.update({
-                    components: [
-                        rejectedContainer
-                    ]
-                });
-
-            }
-
-
-        } catch (error) {
-
-            console.error(
-                '❌ Erro ao analisar application:',
-                error
+        const adminRole =
+            interaction.guild.roles.cache.find(
+                role =>
+                    [
+                        'admin',
+                        'admins',
+                        'administrator'
+                    ].includes(
+                        role.name.toLowerCase()
+                    )
             );
 
-        }
 
-    }
-);
+        const staffRole =
+            interaction.guild.roles.cache.find(
+                role =>
+                    [
+                        'staff',
+                        'staffs'
+                    ].includes(
+                        role.name.toLowerCase()
+                    )
+            );
 
 
-// ======================================================
-// ❌ ERROS
-// ======================================================
+        const owners =
+            ownerRole
+                ? ownerRole.members.map(
+                    member => `• ${member}`
+                )
+                : [];
 
-client.on(
-    'error',
-    error => {
+
+        const admins =
+            adminRole
+                ? adminRole.members.map(
+                    member => `• ${member}`
+                )
+                : [];
+
+
+        const staffs =
+            staffRole
+                ? staffRole.members.map(
+                    member => `• ${member}`
+                )
+                : [];
+
+
+        const teamContainer =
+            new ContainerBuilder()
+
+                .setAccentColor(
+                    0x009DFF
+                )
+
+                .addTextDisplayComponents(
+                    new TextDisplayBuilder()
+                        .setContent(
+`# 🐺 HUSHPVP TEAM
+
+# 👑 OWNER
+${owners.length ? owners.join('\n') : '• Nenhum membro'}
+
+# 🛡️ ADMIN
+${admins.length ? admins.join('\n') : '• Nenhum membro'}
+
+# ⚔️ STAFF
+${staffs.length ? staffs.join('\n') : '• Nenhum membro'}
+
+> 💙 HushPvP • Equipe Oficial`
+                        )
+                );
+
+
+        await interaction.reply({
+            components: [
+                teamContainer
+            ],
+            flags:
+                MessageFlags.IsComponentsV2
+        });
+
+
+    } catch (error) {
 
         console.error(
-            '❌ Erro do Discord:',
+            '❌ Erro no /team:',
             error
         );
 
     }
-);
+
+});
+
+
+// ======================================================
+// 📝 BOTÃO DE RECRUTAMENTO
+// ======================================================
+
+client.on('interactionCreate', async interaction => {
+
+    if (!interaction.isButton()) return;
+
+    if (
+        interaction.customId !==
+        'hushpvp_apply'
+    ) return;
+
+
+    const user =
+        interaction.user;
+
+
+    // ==================================================
+    // 🚫 EVITAR DUPLICIDADE
+    // ==================================================
+
+    if (
+        applicationsInProgress.has(
+            user.id
+        )
+    ) {
+
+        await interaction.reply({
+            content:
+                '⚠️ Você já possui uma candidatura em andamento na sua DM.',
+            ephemeral:
+                true
+        });
+
+        return;
+    }
+
+
+    let dm;
+
+
+    // ==================================================
+    // 📩 ABRIR DM
+    // ==================================================
+
+    try {
+
+        dm =
+            await user.createDM();
+
+        await dm.send(
+`# 🐺 RECRUTAMENTO HUSHPVP
+
+Olá ${user}!
+
+Bem-vindo ao processo de recrutamento da equipe **HushPvP**.
+
+Vou fazer algumas perguntas para você.
+
+Responda uma por uma com calma e sinceridade.
+
+> Digite **cancelar** a qualquer momento para cancelar sua candidatura.
+
+Boa sorte! ⚔️`
+        );
+
+
+    } catch {
+
+        await interaction.reply({
+            content:
+                '❌ Não consegui enviar uma mensagem privada para você. Ative suas DMs e tente novamente.',
+            ephemeral:
+                true
+        });
+
+        return;
+
+    }
+
+
+    await interaction.reply({
+        content:
+            '📩 Te mandei uma DM! Continue seu recrutamento no privado.',
+        ephemeral:
+            true
+    });
+
+
+    applicationsInProgress.add(
+        user.id
+    );
+
+
+    // ==================================================
+    // ❓ PERGUNTAS
+    // ==================================================
+
+    const questions = [
+
+        '🎮 **1/7 — Qual é o seu nick no Minecraft?**',
+
+        '🎂 **2/7 — Qual é a sua idade?**',
+
+        `🛡️ **3/7 — Para qual cargo você está se candidatando?**
+
+• Staff
+• Admin
+• Moderador
+• Builder
+• Developer`,
+
+        `📋 **4/7 — Você já teve experiência como staff anteriormente?**
+
+Se sim, diga em quais servidores e quais cargos você já ocupou.`,
+
+        `⏰ **5/7 — Quanto tempo você consegue ficar ativo no HushPvP?**
+
+Exemplos:
+• 2 horas por dia
+• 4 horas por dia
+• Apenas finais de semana`,
+
+        '🤝 **6/7 — Por que você quer entrar para a equipe do HushPvP?**',
+
+        '⭐ **7/7 — Por que deveríamos escolher você para fazer parte da equipe?**'
+
+    ];
+
+
+    const answers = [];
+
+
+    try {
+
+        for (
+            let i = 0;
+            i < questions.length;
+            i++
+        ) {
+
+            await dm.send(
+                questions[i]
+            );
+
+
+            const collected =
+                await dm.awaitMessages({
+
+                    filter:
+                        message =>
+                            message.author.id ===
+                            user.id,
+
+                    max: 1,
+
+                    time:
+                        5 * 60 * 1000,
+
+                    errors:
+                        ['time']
+
+                });
+
+
+            const answer =
+                collected
+                    .first()
+                    .content
+                    .trim();
+
+
+            // CANCELAR
+            if (
+                answer.toLowerCase() === 'cancel' ||
+                answer.toLowerCase() === 'cancelar'
+            ) {
+
+                await dm.send(
+`# ❌ CANDIDATURA CANCELADA
+
+Sua candidatura foi cancelada.
+
+Você poderá tentar novamente quando quiser.
+
+> 🐺 HushPvP • Recrutamento`
+                );
+
+
+                applicationsInProgress.delete(
+                    user.id
+                );
+
+                return;
+
+            }
+
+
+            answers.push(
+                answer
+            );
+
+
+            await dm.send(
+                '✅ **Resposta salva!**'
+            );
+
+        }
+
+
+        // ==================================================
+        // 📤 CANAL DE ANÁLISE
+        // ==================================================
+
+        const reviewChannel =
+            await client.channels.fetch(
+                APPLICATION_REVIEW_CHANNEL_ID
+            );
+
+
+        if (
+            !reviewChannel ||
+            !reviewChannel.isTextBased()
+        ) {
+
+            throw new Error(
+                'Canal de análise inválido.'
+            );
+
+        }
+
+
+        // ==================================================
+        // ✅ BOTÃO ACEITAR
+        // ==================================================
+
+        const acceptButton =
+            new ButtonBuilder()
+
+                .setCustomId(
+                    `application_accept_${user.id}`
+                )
+
+                .setLabel(
+                    'Aceitar'
+                )
+
+                .setEmoji('✅')
+
+                .setStyle(
+                    ButtonStyle.Success
+                );
+
+
+        // ==================================================
+        // ❌ BOTÃO REJEITAR
+        // ==================================================
+
+        const rejectButton =
+            new ButtonBuilder()
+
+                .setCustomId(
+                    `application_reject_${user.id}`
+                )
+
+                .setLabel(
+                    'Rejeitar'
+                )
+
+                .setEmoji('❌')
+
+                .setStyle(
+                    ButtonStyle.Danger
+                );
+
+
+        const buttons =
+            new ActionRowBuilder()
+                .addComponents(
+                    acceptButton,
+                    rejectButton
+                );
+
+
+        // ==================================================
+        // 📋 CANDIDATURA PARA STAFF
+        // ==================================================
+
+        const applicationContainer =
+            new ContainerBuilder()
+
+                .setAccentColor(
+                    0x009DFF
+                )
+
+                .addTextDisplayComponents(
+                    new TextDisplayBuilder()
+                        .setContent(
+`# 📋 NOVA CANDIDATURA
+
+## 👤 Candidato
+${user}
+
+**Discord:** ${user.tag}
+**ID:** \`${user.id}\`
+
+## 🎮 Nick no Minecraft
+${answers[0]}
+
+## 🎂 Idade
+${answers[1]}
+
+## 🛡️ Cargo desejado
+${answers[2]}
+
+## 📋 Experiência anterior
+${answers[3]}
+
+## ⏰ Disponibilidade
+${answers[4]}
+
+## 🤝 Por que quer entrar no HushPvP?
+${answers[5]}
+
+## ⭐ Por que devemos escolher você?
+${answers[6]}
+
+> 🐺 HushPvP • Sistema de Recrutamento`
+                        )
+                )
+
+                .addActionRowComponents(
+                    buttons
+                );
+
+
+        await reviewChannel.send({
+            components: [
+                applicationContainer
+            ],
+            flags:
+                MessageFlags.IsComponentsV2
+        });
+
+
+        await dm.send(
+`# ✅ CANDIDATURA ENVIADA
+
+Sua candidatura foi enviada com sucesso para a equipe do **HushPvP**.
+
+Agora aguarde a análise dos administradores.
+
+Você receberá o resultado aqui mesmo, pela sua DM.
+
+> 🐺 HushPvP • Recrutamento`
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            '❌ Erro no recrutamento:',
+            error
+        );
+
+
+        try {
+
+            await dm.send(
+`# ⏰ CANDIDATURA ENCERRADA
+
+Você demorou muito para responder ou ocorreu um erro durante o recrutamento.
+
+Você poderá iniciar uma nova candidatura quando estiver pronto.
+
+> 🐺 HushPvP • Recrutamento`
+            );
+
+        } catch {}
+
+    }
+
+
+    applicationsInProgress.delete(
+        user.id
+    );
+
+});
+
+
+// ======================================================
+// ✅ ACEITAR / ❌ REJEITAR
+// ======================================================
+
+client.on('interactionCreate', async interaction => {
+
+    if (!interaction.isButton()) return;
+
+
+    const isAccept =
+        interaction.customId.startsWith(
+            'application_accept_'
+        );
+
+    const isReject =
+        interaction.customId.startsWith(
+            'application_reject_'
+        );
+
+
+    if (
+        !isAccept &&
+        !isReject
+    ) return;
+
+
+    // ==================================================
+    // 🛡️ VERIFICAR PERMISSÃO
+    // ==================================================
+
+    const allowedRoles = [
+        'owner',
+        'owners',
+        'admin',
+        'admins',
+        'administrator'
+    ];
+
+
+    const hasPermission =
+        interaction.member.roles.cache.some(
+            role =>
+                allowedRoles.includes(
+                    role.name.toLowerCase()
+                )
+        );
+
+
+    if (!hasPermission) {
+
+        await interaction.reply({
+            content:
+                '❌ Apenas Owner ou Admin pode analisar candidaturas.',
+            ephemeral:
+                true
+        });
+
+        return;
+
+    }
+
+
+    // ==================================================
+    // 👤 PEGAR CANDIDATO
+    // ==================================================
+
+    const userId =
+        interaction.customId
+
+            .replace(
+                'application_accept_',
+                ''
+            )
+
+            .replace(
+                'application_reject_',
+                ''
+            );
+
+
+    try {
+
+        const candidate =
+            await client.users.fetch(
+                userId
+            );
+
+
+        // ==================================================
+        // ✅ ACEITAR
+        // ==================================================
+
+        if (isAccept) {
+
+            try {
+
+                await candidate.send(
+`# 🎉 CANDIDATURA ACEITA!
+
+Parabéns!
+
+Sua candidatura para entrar na equipe do **HushPvP** foi **ACEITA**. ✅
+
+Um administrador entrará em contato com você para informar os próximos passos.
+
+Bem-vindo à equipe! 🐺⚔️
+
+> HushPvP • Recrutamento`
+                );
+
+            } catch {}
+
+
+            const acceptedContainer =
+                new ContainerBuilder()
+
+                    .setAccentColor(
+                        0x00FF7F
+                    )
+
+                    .addTextDisplayComponents(
+                        new TextDisplayBuilder()
+                            .setContent(
+`# ✅ CANDIDATURA ACEITA
+
+👤 **Candidato:** ${candidate}
+
+🛡️ **Analisado por:** ${interaction.user}
+
+## 🎉 RESULTADO
+**ACEITO**
+
+> 🐺 HushPvP • Recrutamento`
+                            )
+                    );
+
+
+            await interaction.update({
+                components: [
+                    acceptedContainer
+                ]
+            });
+
+
+            console.log(
+                `✅ ${candidate.tag} foi aceito por ${interaction.user.tag}`
+            );
+
+        }
+
+
+        // ==================================================
+        // ❌ REJEITAR
+        // ==================================================
+
+        if (isReject) {
+
+            try {
+
+                await candidate.send(
+`# ❌ RESULTADO DA CANDIDATURA
+
+Obrigado pelo interesse em fazer parte da equipe do **HushPvP**.
+
+Após analisarmos sua candidatura, infelizmente ela **não foi aprovada desta vez**.
+
+Você poderá tentar novamente em outra oportunidade.
+
+Obrigado por participar. 💙
+
+> 🐺 HushPvP • Recrutamento`
+                );
+
+            } catch {}
+
+
+            const rejectedContainer =
+                new ContainerBuilder()
+
+                    .setAccentColor(
+                        0xFF0000
+                    )
+
+                    .addTextDisplayComponents(
+                        new TextDisplayBuilder()
+                            .setContent(
+`# ❌ CANDIDATURA REJEITADA
+
+👤 **Candidato:** ${candidate}
+
+🛡️ **Analisado por:** ${interaction.user}
+
+## RESULTADO
+**REJEITADO**
+
+> 🐺 HushPvP • Recrutamento`
+                            )
+                    );
+
+
+            await interaction.update({
+                components: [
+                    rejectedContainer
+                ]
+            });
+
+
+            console.log(
+                `❌ ${candidate.tag} foi rejeitado por ${interaction.user.tag}`
+            );
+
+        }
+
+
+    } catch (error) {
+
+        console.error(
+            '❌ Erro ao analisar candidatura:',
+            error
+        );
+
+    }
+
+});
+
+
+// ======================================================
+// ❌ ERROS DO BOT
+// ======================================================
+
+client.on('error', error => {
+
+    console.error(
+        '❌ Erro do Discord:',
+        error
+    );
+
+});
 
 
 // ======================================================
