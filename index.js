@@ -5,77 +5,55 @@ const {
     GatewayIntentBits,
     Partials,
     ActivityType,
-
     SlashCommandBuilder,
     PermissionFlagsBits,
     ChannelType,
-
     ContainerBuilder,
     TextDisplayBuilder,
     MediaGalleryBuilder,
     MediaGalleryItemBuilder,
     AttachmentBuilder,
     MessageFlags,
-
     ButtonBuilder,
     ButtonStyle,
     ActionRowBuilder,
-
     StringSelectMenuBuilder,
-
     ModalBuilder,
     TextInputBuilder,
     TextInputStyle
 } = require('discord.js');
 
-const {
-    joinVoiceChannel
-} = require('@discordjs/voice');
-
+const { joinVoiceChannel } = require('@discordjs/voice');
 const express = require('express');
 
 
 // ======================================================
-// 🐺 HUSHPVP CONFIG
+// ⭐ ASTER — CONFIGURAÇÕES
 // ======================================================
 
-const GUILD_ID =
-    '1545935454694670378';
+const SERVER_NAME = 'Aster';
 
+const GUILD_ID = '1545935454694670378';
 
 // 📝 RECRUTAMENTO
-const RECRUITMENT_CHANNEL_ID =
-    '1545962982385647687';
+const RECRUITMENT_CHANNEL_ID = '1545962982385647687';
+const APPLICATION_REVIEW_CHANNEL_ID = '1545963991736524840';
+const REVIEW_LOG_CHANNEL_ID = '1545956902826151956';
 
-const APPLICATION_REVIEW_CHANNEL_ID =
-    '1545963991736524840';
+// 🎫 TICKET
+const TICKET_PANEL_CHANNEL_ID = '1545956394342289478';
 
-const REVIEW_LOG_CHANNEL_ID =
-    '1545956902826151956';
-
-
-// 🎫 PAINEL DE TICKETS
-const TICKET_PANEL_CHANNEL_ID =
-    '1545956394342289478';
-
-
-// Categoria criada automaticamente
-const TICKET_CATEGORY_NAME =
-    'HUSHPVP TICKETS';
+// PRECISA SER UMA CATEGORIA
+const TICKET_CATEGORY_ID = '1546151207217668166';
 
 
 // ======================================================
-// 💾 MEMÓRIA
+// 💾 MEMÓRIA TEMPORÁRIA
 // ======================================================
 
-const applicationsInProgress =
-    new Set();
-
-const applications =
-    new Map();
-
-const ticketSelections =
-    new Map();
+const applicationsInProgress = new Set();
+const applications = new Map();
+const ticketSelections = new Map();
 
 
 // ======================================================
@@ -83,26 +61,14 @@ const ticketSelections =
 // ======================================================
 
 const app = express();
-
-const PORT =
-    process.env.PORT || 3000;
-
+const PORT = process.env.PORT || 3000;
 
 app.get('/', (req, res) => {
-
-    res.send(
-        '🐺 HushPvP Bot Online!'
-    );
-
+    res.send('⭐ Aster Bot Online!');
 });
 
-
 app.listen(PORT, () => {
-
-    console.log(
-        `🌐 Servidor web na porta ${PORT}`
-    );
-
+    console.log(`🌐 Web online na porta ${PORT}`);
 });
 
 
@@ -110,32 +76,20 @@ app.listen(PORT, () => {
 // 🤖 CLIENT
 // ======================================================
 
-const client =
-    new Client({
+const client = new Client({
+    intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.GuildVoiceStates,
+        GatewayIntentBits.DirectMessages
+    ],
 
-        intents: [
-
-            GatewayIntentBits.Guilds,
-
-            GatewayIntentBits.GuildMembers,
-
-            GatewayIntentBits.GuildMessages,
-
-            GatewayIntentBits.MessageContent,
-
-            GatewayIntentBits.GuildVoiceStates,
-
-            GatewayIntentBits.DirectMessages
-
-        ],
-
-        partials: [
-
-            Partials.Channel
-
-        ]
-
-    });
+    partials: [
+        Partials.Channel
+    ]
+});
 
 
 // ======================================================
@@ -143,23 +97,17 @@ const client =
 // ======================================================
 
 const STAFF_ROLE_NAMES = [
-
     'owner',
     'owners',
-
     'admin',
     'admins',
     'administrator',
-
     'staff',
     'staffs',
-
     'moderador',
     'moderadores',
-
     'moderator',
     'moderators'
-
 ];
 
 
@@ -171,566 +119,315 @@ function isStaff(member) {
 
     if (!member) return false;
 
-
-    // Administrador sempre pode
     if (
         member.permissions.has(
             PermissionFlagsBits.Administrator
         )
     ) {
-
         return true;
-
     }
 
-
-    return member.roles.cache.some(
-        role =>
-            STAFF_ROLE_NAMES.includes(
-                role.name.toLowerCase()
-            )
+    return member.roles.cache.some(role =>
+        STAFF_ROLE_NAMES.includes(
+            role.name.toLowerCase()
+        )
     );
-
 }
 
 
 // ======================================================
-// 👑 OWNER / ADMIN
+// 👑 VERIFICAR ADMIN
 // ======================================================
 
 function isAdmin(member) {
 
     if (!member) return false;
 
-
     if (
         member.permissions.has(
             PermissionFlagsBits.Administrator
         )
     ) {
-
         return true;
-
     }
 
-
-    const roles = [
-
+    const adminRoles = [
         'owner',
         'owners',
         'admin',
         'admins',
         'administrator'
-
     ];
 
-
-    return member.roles.cache.some(
-        role =>
-            roles.includes(
-                role.name.toLowerCase()
-            )
+    return member.roles.cache.some(role =>
+        adminRoles.includes(
+            role.name.toLowerCase()
+        )
     );
-
 }
 
 
 // ======================================================
-// ⏰ CONVERTER TEMPO DO MUTE
+// ⏰ CONVERTER TEMPO
 // ======================================================
 
 function parseDuration(input) {
 
     if (!input) return null;
 
-
-    const match =
-        input
-            .toLowerCase()
-            .match(
-                /^(\d+)(s|m|h|d)$/
-            );
-
+    const match = input
+        .toLowerCase()
+        .match(/^(\d+)(s|m|h|d)$/);
 
     if (!match) return null;
 
+    const value = Number(match[1]);
+    const unit = match[2];
 
-    const value =
-        Number(match[1]);
-
-    const unit =
-        match[2];
-
-
-    const units = {
-
+    const multipliers = {
         s: 1000,
-
         m: 60 * 1000,
-
         h: 60 * 60 * 1000,
-
         d: 24 * 60 * 60 * 1000
-
     };
 
-
-    return value * units[unit];
-
+    return value * multipliers[unit];
 }
 
 
 // ======================================================
-// ⚔️ SLASH COMMANDS
+// ⚔️ COMANDOS
 // ======================================================
 
-const teamCommand =
-    new SlashCommandBuilder()
+// /team
 
-        .setName('team')
-
-        .setDescription(
-            'Mostra a equipe oficial do HushPvP'
-        );
+const teamCommand = new SlashCommandBuilder()
+    .setName('team')
+    .setDescription('Mostra a equipe oficial do Aster');
 
 
-// ======================================================
+// /statuson
 
-const statusOnCommand =
-    new SlashCommandBuilder()
-
-        .setName('statuson')
-
-        .setDescription(
-            'Define o servidor Minecraft como online'
-        );
+const statusOnCommand = new SlashCommandBuilder()
+    .setName('statuson')
+    .setDescription('Mostra que o servidor Aster está ONLINE');
 
 
-// ======================================================
+// /statusoff
 
-const statusOffCommand =
-    new SlashCommandBuilder()
-
-        .setName('statusoff')
-
-        .setDescription(
-            'Define o servidor Minecraft como offline'
-        );
+const statusOffCommand = new SlashCommandBuilder()
+    .setName('statusoff')
+    .setDescription('Mostra que o servidor Aster está OFFLINE');
 
 
 // ======================================================
-// 🔨 BAN
+// 🔨 /BAN
 // ======================================================
 
-const banCommand =
-    new SlashCommandBuilder()
+const banCommand = new SlashCommandBuilder()
 
-        .setName('ban')
+    .setName('ban')
+    .setDescription('Bane um membro do Aster')
 
-        .setDescription(
-            'Bane um usuário do servidor'
-        )
+    .addUserOption(option =>
+        option
+            .setName('usuario')
+            .setDescription('Usuário que será banido')
+            .setRequired(true)
+    )
 
-        .addUserOption(
-            option =>
+    .addStringOption(option =>
+        option
+            .setName('motivo')
+            .setDescription('Motivo do banimento')
+            .setRequired(true)
+    )
 
-                option
-
-                    .setName(
-                        'usuario'
-                    )
-
-                    .setDescription(
-                        'Usuário que será banido'
-                    )
-
-                    .setRequired(
-                        true
-                    )
-        )
-
-        .addStringOption(
-            option =>
-
-                option
-
-                    .setName(
-                        'motivo'
-                    )
-
-                    .setDescription(
-                        'Motivo da punição'
-                    )
-
-                    .setRequired(
-                        true
-                    )
-        )
-
-        .setDefaultMemberPermissions(
-            PermissionFlagsBits.BanMembers
-        );
+    .setDefaultMemberPermissions(
+        PermissionFlagsBits.BanMembers
+    );
 
 
 // ======================================================
-// 👢 KICK
+// 👢 /KICK
 // ======================================================
 
-const kickCommand =
-    new SlashCommandBuilder()
+const kickCommand = new SlashCommandBuilder()
 
-        .setName('kick')
+    .setName('kick')
+    .setDescription('Expulsa um membro do Aster')
 
-        .setDescription(
-            'Expulsa um usuário do servidor'
-        )
+    .addUserOption(option =>
+        option
+            .setName('usuario')
+            .setDescription('Usuário que será expulso')
+            .setRequired(true)
+    )
 
-        .addUserOption(
-            option =>
+    .addStringOption(option =>
+        option
+            .setName('motivo')
+            .setDescription('Motivo da expulsão')
+            .setRequired(true)
+    )
 
-                option
-
-                    .setName(
-                        'usuario'
-                    )
-
-                    .setDescription(
-                        'Usuário'
-                    )
-
-                    .setRequired(
-                        true
-                    )
-        )
-
-        .addStringOption(
-            option =>
-
-                option
-
-                    .setName(
-                        'motivo'
-                    )
-
-                    .setDescription(
-                        'Motivo'
-                    )
-
-                    .setRequired(
-                        true
-                    )
-        )
-
-        .setDefaultMemberPermissions(
-            PermissionFlagsBits.KickMembers
-        );
+    .setDefaultMemberPermissions(
+        PermissionFlagsBits.KickMembers
+    );
 
 
 // ======================================================
-// 🔇 MUTE
+// 🔇 /MUTE
 // ======================================================
 
-const muteCommand =
-    new SlashCommandBuilder()
+const muteCommand = new SlashCommandBuilder()
 
-        .setName('mute')
+    .setName('mute')
+    .setDescription('Muta um membro do Aster')
 
-        .setDescription(
-            'Silencia um usuário'
-        )
+    .addUserOption(option =>
+        option
+            .setName('usuario')
+            .setDescription('Usuário que será mutado')
+            .setRequired(true)
+    )
 
-        .addUserOption(
-            option =>
+    .addStringOption(option =>
+        option
+            .setName('tempo')
+            .setDescription('Exemplo: 10m, 1h, 1d')
+            .setRequired(true)
+    )
 
-                option
+    .addStringOption(option =>
+        option
+            .setName('motivo')
+            .setDescription('Motivo do mute')
+            .setRequired(true)
+    )
 
-                    .setName(
-                        'usuario'
-                    )
-
-                    .setDescription(
-                        'Usuário'
-                    )
-
-                    .setRequired(
-                        true
-                    )
-        )
-
-        .addStringOption(
-            option =>
-
-                option
-
-                    .setName(
-                        'tempo'
-                    )
-
-                    .setDescription(
-                        'Ex: 10m, 1h, 1d'
-                    )
-
-                    .setRequired(
-                        true
-                    )
-        )
-
-        .addStringOption(
-            option =>
-
-                option
-
-                    .setName(
-                        'motivo'
-                    )
-
-                    .setDescription(
-                        'Motivo'
-                    )
-
-                    .setRequired(
-                        true
-                    )
-        )
-
-        .setDefaultMemberPermissions(
-            PermissionFlagsBits.ModerateMembers
-        );
+    .setDefaultMemberPermissions(
+        PermissionFlagsBits.ModerateMembers
+    );
 
 
 // ======================================================
-// 🔊 UNMUTE
+// 🔊 /UNMUTE
 // ======================================================
 
-const unmuteCommand =
-    new SlashCommandBuilder()
+const unmuteCommand = new SlashCommandBuilder()
 
-        .setName('unmute')
+    .setName('unmute')
+    .setDescription('Remove o mute de um membro')
 
-        .setDescription(
-            'Remove o mute de um usuário'
-        )
+    .addUserOption(option =>
+        option
+            .setName('usuario')
+            .setDescription('Usuário')
+            .setRequired(true)
+    )
 
-        .addUserOption(
-            option =>
-
-                option
-
-                    .setName(
-                        'usuario'
-                    )
-
-                    .setDescription(
-                        'Usuário'
-                    )
-
-                    .setRequired(
-                        true
-                    )
-        )
-
-        .setDefaultMemberPermissions(
-            PermissionFlagsBits.ModerateMembers
-        );
+    .setDefaultMemberPermissions(
+        PermissionFlagsBits.ModerateMembers
+    );
 
 
 // ======================================================
-// 🎫 PEGAR/CRIAR CATEGORIA DE TICKETS
-// ======================================================
-
-async function getTicketCategory(
-    guild
-) {
-
-    let category =
-        guild.channels.cache.find(
-
-            channel =>
-
-                channel.type ===
-                    ChannelType.GuildCategory &&
-
-                channel.name ===
-                    TICKET_CATEGORY_NAME
-
-        );
-
-
-    if (!category) {
-
-        category =
-            await guild.channels.create({
-
-                name:
-                    TICKET_CATEGORY_NAME,
-
-                type:
-                    ChannelType.GuildCategory
-
-            });
-
-
-        console.log(
-            '✅ Categoria de tickets criada!'
-        );
-
-    }
-
-
-    return category;
-
-}
-
-
-// ======================================================
-// 🎫 PAINEL DE TICKETS
+// 🎫 PAINEL DE TICKET
 // ======================================================
 
 async function sendTicketPanel() {
 
     try {
 
-        const channel =
-            await client.channels.fetch(
-                TICKET_PANEL_CHANNEL_ID
-            );
+        const channel = await client.channels.fetch(
+            TICKET_PANEL_CHANNEL_ID
+        );
 
-
-        if (
-            !channel ||
-            !channel.isTextBased()
-        ) {
-
-            console.log(
-                '❌ Canal de ticket inválido.'
-            );
-
+        if (!channel || !channel.isTextBased()) {
+            console.log('❌ Canal do painel de ticket inválido.');
             return;
-
         }
 
 
-        // ==============================================
-        // 🧹 APAGAR PAINEL ANTIGO
-        // ==============================================
-
+        // APAGA SOMENTE MENSAGENS ANTIGAS DO BOT
         try {
 
-            const messages =
-                await channel.messages.fetch({
-                    limit: 30
-                });
+            const messages = await channel.messages.fetch({
+                limit: 30
+            });
 
+            const botMessages = messages.filter(
+                message =>
+                    message.author.id === client.user.id
+            );
 
-            const botMessages =
-                messages.filter(
-
-                    message =>
-                        message.author.id ===
-                        client.user.id
-
-                );
-
-
-            for (
-                const message
-                of botMessages.values()
-            ) {
-
-                await message
-                    .delete()
-                    .catch(() => {});
-
+            for (const message of botMessages.values()) {
+                await message.delete().catch(() => {});
             }
 
         } catch {}
 
 
-        // ==============================================
-        // 🔘 BOTÃO
-        // ==============================================
-
-        const button =
-            new ButtonBuilder()
-
-                .setCustomId(
-                    'ticket_start'
-                )
-
-                .setLabel(
-                    'Iniciar Ticket'
-                )
-
-                .setEmoji(
-                    '🎫'
-                )
-
-                .setStyle(
-                    ButtonStyle.Primary
-                );
+        const startButton = new ButtonBuilder()
+            .setCustomId('ticket_start')
+            .setLabel('Iniciar Ticket')
+            .setEmoji('🎫')
+            .setStyle(ButtonStyle.Primary);
 
 
-        const row =
-            new ActionRowBuilder()
-
-                .addComponents(
-                    button
-                );
+        const row = new ActionRowBuilder()
+            .addComponents(startButton);
 
 
-        const container =
-            new ContainerBuilder()
+        const container = new ContainerBuilder()
 
-                .setAccentColor(
-                    0x009DFF
-                )
+            .setAccentColor(0x7B2EFF)
 
-                .addTextDisplayComponents(
+            .addTextDisplayComponents(
 
-                    new TextDisplayBuilder()
-                        .setContent(
-`# 🐺 HUSHPVP • CENTRAL DE SUPORTE
+                new TextDisplayBuilder().setContent(
+`# ⭐ ASTER • CENTRAL DE SUPORTE
 
-## 🎫 Precisa de ajuda?
+## 🎫 PRECISA DE ATENDIMENTO?
 
-Nossa equipe está disponível para ajudar você com problemas, dúvidas e suporte relacionado ao **HushPvP**.
+Bem-vindo à Central de Suporte do **Aster**.
 
-### 📂 Tipos de atendimento
+Nossa equipe está disponível para ajudar você com problemas, dúvidas ou outras situações relacionadas ao servidor.
+
+## 📂 TIPOS DE ATENDIMENTO
 
 🎫 **Support**
 Problemas gerais relacionados ao servidor.
 
 🆘 **Ajuda**
-Precisa da ajuda de um membro da equipe?
+Precisa da ajuda de um membro da equipe.
 
 ❓ **Dúvida**
-Possui alguma dúvida sobre o HushPvP?
+Possui alguma dúvida sobre o Aster.
 
-### ⚠️ Atenção
+## ⚠️ ANTES DE ABRIR UM TICKET
 
 • Não abra tickets sem necessidade
-• Explique seu problema corretamente
-• Respeite nossa equipe
-• Não marque membros da staff desnecessariamente
-• Aguarde até alguém atender você
+• Explique corretamente o seu problema
+• Respeite os membros da equipe
+• Não fique marcando Staff
+• Aguarde seu atendimento
+• Não abra vários tickets ao mesmo tempo
 
-📩 **Clique em Iniciar Ticket para começar.**
+📩 **Clique no botão abaixo para iniciar seu atendimento.**
 
-> 🐺 HushPvP • Support System`
-                        )
-
+> ⭐ Aster • Support System`
                 )
 
-                .addActionRowComponents(
-                    row
-                );
+            )
+
+            .addActionRowComponents(row);
 
 
         await channel.send({
 
-            components: [
-                container
-            ],
+            components: [container],
 
             flags:
                 MessageFlags.IsComponentsV2
@@ -739,9 +436,8 @@ Possui alguma dúvida sobre o HushPvP?
 
 
         console.log(
-            '🎫 Painel de tickets enviado!'
+            '🎫 Painel de suporte Aster enviado!'
         );
-
 
     } catch (error) {
 
@@ -751,131 +447,101 @@ Possui alguma dúvida sobre o HushPvP?
         );
 
     }
-
 }
 
 
 // ======================================================
-// 📝 PAINEL RECRUTAMENTO
+// 📝 PAINEL DE RECRUTAMENTO
 // ======================================================
 
 async function sendRecruitmentPanel() {
 
     try {
 
-        const channel =
-            await client.channels.fetch(
-                RECRUITMENT_CHANNEL_ID
-            );
+        const channel = await client.channels.fetch(
+            RECRUITMENT_CHANNEL_ID
+        );
+
+        if (!channel || !channel.isTextBased()) {
+            return;
+        }
 
 
-        if (
-            !channel ||
-            !channel.isTextBased()
-        ) return;
-
-
+        // APAGA SOMENTE PAINÉIS ANTIGOS DO BOT
         try {
 
-            const messages =
-                await channel.messages.fetch({
-                    limit: 20
-                });
+            const messages = await channel.messages.fetch({
+                limit: 20
+            });
 
+            const botMessages = messages.filter(
+                message =>
+                    message.author.id === client.user.id
+            );
 
-            const botMessages =
-                messages.filter(
-                    m =>
-                        m.author.id ===
-                        client.user.id
-                );
-
-
-            for (
-                const message
-                of botMessages.values()
-            ) {
-
-                await message
-                    .delete()
-                    .catch(() => {});
-
+            for (const message of botMessages.values()) {
+                await message.delete().catch(() => {});
             }
 
         } catch {}
 
 
-        const button =
-            new ButtonBuilder()
-
-                .setCustomId(
-                    'hushpvp_apply'
-                )
-
-                .setLabel(
-                    'Enviar candidatura'
-                )
-
-                .setEmoji(
-                    '📝'
-                )
-
-                .setStyle(
-                    ButtonStyle.Primary
-                );
+        const applyButton = new ButtonBuilder()
+            .setCustomId('aster_apply')
+            .setLabel('Enviar candidatura')
+            .setEmoji('📝')
+            .setStyle(ButtonStyle.Primary);
 
 
-        const row =
-            new ActionRowBuilder()
-
-                .addComponents(
-                    button
-                );
+        const row = new ActionRowBuilder()
+            .addComponents(applyButton);
 
 
-        const container =
-            new ContainerBuilder()
+        const container = new ContainerBuilder()
 
-                .setAccentColor(
-                    0x009DFF
-                )
+            .setAccentColor(0x7B2EFF)
 
-                .addTextDisplayComponents(
+            .addTextDisplayComponents(
 
-                    new TextDisplayBuilder()
-                        .setContent(
-`# 📝 RECRUTAMENTO HUSHPVP
+                new TextDisplayBuilder().setContent(
+`# ⭐ RECRUTAMENTO ASTER
 
-## Processo de Recrutamento
+## 📝 FAÇA PARTE DA NOSSA EQUIPE
 
-Quer fazer parte da equipe do **HushPvP**?
+Quer fazer parte da Staff do **Aster**?
 
-### ✅ Requisitos
+Clique no botão abaixo e responda nossa candidatura pela sua DM.
+
+## ✅ REQUISITOS
 
 • Boa comunicação
+• Respeito com jogadores e Staff
 • Maturidade
-• Respeito
-• Atividade
-• Trabalho em equipe
-• Compromisso
+• Ser ativo no servidor
+• Saber trabalhar em equipe
+• Compromisso com o Aster
 
-📩 **Clique abaixo para iniciar sua candidatura pela DM.**
+## 📌 IMPORTANTE
 
-> 🐺 HushPvP • Recrutamento`
-                        )
+• Responda com sinceridade
+• Não envie várias candidaturas
+• Mantenha sua DM ativada
+• Não envie informações pessoais sensíveis
+• Aguarde a análise da administração
 
+📩 **Clique abaixo para iniciar sua candidatura.**
+
+> ⭐ Aster • Recrutamento Oficial`
                 )
 
-                .addActionRowComponents(
-                    row
-                );
+            )
+
+            .addActionRowComponents(row);
 
 
         await channel.send({
 
-            components: [
-                container
-            ],
+            components: [container],
 
             flags:
                 MessageFlags.IsComponentsV2
@@ -883,697 +549,690 @@ Quer fazer parte da equipe do **HushPvP**?
         });
 
 
+        console.log(
+            '📝 Painel de recrutamento Aster enviado!'
+        );
+
     } catch (error) {
 
         console.error(
+            '❌ Erro no recrutamento:',
+            error
+        );
+
+    }
+}
+
+
+// ======================================================
+// 📜 PAINEL DE REGRAS
+// ======================================================
+
+async function sendRulesPanel() {
+
+    if (!process.env.CANAL_REGRAS_ID) {
+
+        console.log(
+            '⚠️ CANAL_REGRAS_ID não configurado.'
+        );
+
+        return;
+    }
+
+
+    try {
+
+        const channel = await client.channels.fetch(
+            process.env.CANAL_REGRAS_ID
+        );
+
+
+        if (!channel || !channel.isTextBased()) {
+
+            console.log(
+                '❌ Canal de regras inválido.'
+            );
+
+            return;
+        }
+
+
+        // APAGA SOMENTE PAINÉIS ANTIGOS DO PRÓPRIO BOT
+        try {
+
+            const messages = await channel.messages.fetch({
+                limit: 30
+            });
+
+            const botMessages = messages.filter(
+                message =>
+                    message.author.id === client.user.id
+            );
+
+            for (const message of botMessages.values()) {
+                await message.delete().catch(() => {});
+            }
+
+        } catch {}
+
+
+        const banner = new AttachmentBuilder(
+            './regras.png',
+            {
+                name: 'regras.png'
+            }
+        );
+
+
+        const container = new ContainerBuilder()
+
+            .setAccentColor(0x7B2EFF)
+
+            .addMediaGalleryComponents(
+
+                new MediaGalleryBuilder()
+                    .addItems(
+
+                        new MediaGalleryItemBuilder()
+                            .setURL(
+                                'attachment://regras.png'
+                            )
+
+                    )
+
+            )
+
+            .addTextDisplayComponents(
+
+                new TextDisplayBuilder().setContent(
+`# 📜 ASTER • SERVER RULES
+
+> To maintain a fair, competitive and enjoyable environment, all players must follow the rules below.
+
+# 🔇 CHAT MUTES
+
+• Unauthorized links
+• Advertising servers or services
+• Selling outside allowed channels
+• Bypassing chat filters
+• Toxic or disrespectful behavior
+• Mild discrimination
+• Inappropriate content
+• Spam or flooding
+
+# ⛔ PERMANENT CHAT MUTES
+
+• Harassment
+• Bullying
+• Threats
+• Racist or hateful speech
+• Encouraging self-harm
+• Sexual or NSFW content
+
+# 👢 KICKS
+
+• Interfering with Staff
+• Repeated false reports
+• Intentionally avoiding combat
+• Disruptive gameplay behavior
+
+# 🚫 PERMANENT BANS
+
+• Cheats or hacks
+• Exploiting bugs
+• DDoS threats or attacks
+• Ban evasion
+• Impersonating Staff
+• Serious damage to the community
+
+# ⏳ TEMPORARY BANS
+
+• Repeated combat avoidance
+• Match fixing
+• Bug abuse
+• Offensive builds
+• Unsportsmanlike behavior
+• Stat boosting
+
+# ℹ️ ADDITIONAL INFORMATION
+
+• Punishments may increase for repeated offenses
+• Staff decisions are final
+• Rules may change without prior notice
+
+> ⭐ **ASTER**
+> Play fair • Respect others • Stay competitive ⚔️`
+                )
+
+            );
+
+
+        await channel.send({
+
+            components: [container],
+
+            files: [banner],
+
+            flags:
+                MessageFlags.IsComponentsV2
+
+        });
+
+
+        console.log(
+            '📜 Regras Aster enviadas!'
+        );
+
+    } catch (error) {
+
+        console.error(
+            '❌ Erro nas regras:',
+            error
+        );
+
+    }
+}
+
+
+// ======================================================
+// 🚀 BOT ONLINE
+// ======================================================
+
+client.once('ready', async () => {
+
+    console.log('');
+    console.log('==========================================');
+    console.log(`⭐ ASTER BOT ONLINE — ${client.user.tag}`);
+    console.log('👑 xrayvenz');
+    console.log('==========================================');
+    console.log('');
+
+
+    // ==================================================
+    // 🎮 PRESENÇA
+    // ==================================================
+
+    client.user.setPresence({
+
+        activities: [
+            {
+                name: 'Aster ⚔️',
+                type: ActivityType.Playing
+            }
+        ],
+
+        status: 'online'
+
+    });
+
+
+    // ==================================================
+    // ⚔️ REGISTRAR COMANDOS
+    // ==================================================
+
+    try {
+
+        const guild = await client.guilds.fetch(
+            GUILD_ID
+        );
+
+
+        await guild.commands.set([
+
+            teamCommand.toJSON(),
+
+            statusOnCommand.toJSON(),
+
+            statusOffCommand.toJSON(),
+
+            banCommand.toJSON(),
+
+            kickCommand.toJSON(),
+
+            muteCommand.toJSON(),
+
+            unmuteCommand.toJSON()
+
+        ]);
+
+
+        console.log(
+            '✅ Comandos registrados!'
+        );
+
+    } catch (error) {
+
+        console.error(
+            '❌ Erro ao registrar comandos:',
             error
         );
 
     }
 
-}
 
+    // ==================================================
+    // 🔊 ENTRAR NO VOICE
+    // ==================================================
 
-// ======================================================
-// 🚀 READY
-// ======================================================
-
-client.once(
-    'ready',
-    async () => {
-
-        console.log(
-            '======================================'
-        );
-
-        console.log(
-            `🐺 HushPvP Online — ${client.user.tag}`
-        );
-
-        console.log(
-            '👑 Sistema criado para xrayvenz'
-        );
-
-        console.log(
-            '======================================'
-        );
-
-
-        // ==============================================
-        // 🎮 PRESENÇA
-        // ==============================================
-
-        client.user.setPresence({
-
-            activities: [
-
-                {
-
-                    name:
-                        'HushPvP ⚔️',
-
-                    type:
-                        ActivityType.Playing
-
-                }
-
-            ],
-
-            status:
-                'online'
-
-        });
-
-
-        // ==============================================
-        // 📜 REGISTRAR COMANDOS
-        // ==============================================
+    if (process.env.CHANNEL_ID) {
 
         try {
 
-            const guild =
-                await client.guilds.fetch(
-                    GUILD_ID
+            const voiceChannel =
+                await client.channels.fetch(
+                    process.env.CHANNEL_ID
                 );
 
 
-            await guild.commands.set([
+            if (
+                voiceChannel &&
+                voiceChannel.isVoiceBased()
+            ) {
 
-                teamCommand.toJSON(),
+                joinVoiceChannel({
 
-                statusOnCommand.toJSON(),
+                    channelId:
+                        voiceChannel.id,
 
-                statusOffCommand.toJSON(),
+                    guildId:
+                        voiceChannel.guild.id,
 
-                banCommand.toJSON(),
+                    adapterCreator:
+                        voiceChannel.guild
+                            .voiceAdapterCreator,
 
-                kickCommand.toJSON(),
+                    selfDeaf: true,
 
-                muteCommand.toJSON(),
+                    selfMute: false
 
-                unmuteCommand.toJSON()
-
-            ]);
+                });
 
 
-            console.log(
-                '✅ Slash commands registrados!'
-            );
+                console.log(
+                    '🔊 Bot conectado ao canal de voz!'
+                );
+
+            }
 
         } catch (error) {
 
             console.error(
-                '❌ Erro nos comandos:',
+                '❌ Erro no canal de voz:',
                 error
             );
 
         }
-
-
-        // ==============================================
-        // 🔊 VOICE
-        // ==============================================
-
-        if (
-            process.env.CHANNEL_ID
-        ) {
-
-            try {
-
-                const voice =
-                    await client.channels.fetch(
-                        process.env.CHANNEL_ID
-                    );
-
-
-                if (
-                    voice &&
-                    voice.isVoiceBased()
-                ) {
-
-                    joinVoiceChannel({
-
-                        channelId:
-                            voice.id,
-
-                        guildId:
-                            voice.guild.id,
-
-                        adapterCreator:
-                            voice.guild
-                                .voiceAdapterCreator,
-
-                        selfDeaf:
-                            true,
-
-                        selfMute:
-                            false
-
-                    });
-
-                }
-
-            } catch (error) {
-
-                console.error(
-                    error
-                );
-
-            }
-
-        }
-
-
-        // ==============================================
-        // 📜 REGRAS
-        // ==============================================
-
-        if (
-            process.env.CANAL_REGRAS_ID
-        ) {
-
-            try {
-
-                const rulesChannel =
-                    await client.channels.fetch(
-                        process.env
-                            .CANAL_REGRAS_ID
-                    );
-
-
-                if (
-                    rulesChannel &&
-                    rulesChannel.isTextBased()
-                ) {
-
-                    const banner =
-                        new AttachmentBuilder(
-                            './regras.png',
-                            {
-                                name:
-                                    'regras.png'
-                            }
-                        );
-
-
-                    const container =
-                        new ContainerBuilder()
-
-                            .setAccentColor(
-                                0x009DFF
-                            )
-
-                            .addMediaGalleryComponents(
-
-                                new MediaGalleryBuilder()
-                                    .addItems(
-
-                                        new MediaGalleryItemBuilder()
-                                            .setURL(
-                                                'attachment://regras.png'
-                                            )
-
-                                    )
-
-                            )
-
-                            .addTextDisplayComponents(
-
-                                new TextDisplayBuilder()
-                                    .setContent(
-`# 📜 SERVER RULES
-
-> To maintain a fair, competitive and enjoyable environment, all players must follow the rules.
-
-# 🔇 CHAT MUTES
-• Unauthorized links
-• Advertising
-• Spam
-• Toxic behavior
-• Inappropriate content
-
-# ⛔ PERMANENT CHAT MUTES
-• Harassment
-• Threats
-• Racist or hateful speech
-• NSFW content
-
-# 👢 KICKS
-• False reports
-• Disruptive behavior
-• Interfering with staff
-
-# 🚫 PERMANENT BANS
-• Cheats
-• Hacks
-• Exploiting bugs
-• DDoS threats
-• Ban evasion
-• Impersonating staff
-
-# ⏳ TEMPORARY BANS
-• Bug abuse
-• Match fixing
-• Stat boosting
-• Unsportsmanlike behavior
-
-> 🐺 **HushPvP**
-> Play fair • Respect others • Stay competitive ⚔️`
-                                    )
-
-                            );
-
-
-                    await rulesChannel.send({
-
-                        components: [
-                            container
-                        ],
-
-                        files: [
-                            banner
-                        ],
-
-                        flags:
-                            MessageFlags.IsComponentsV2
-
-                    });
-
-                }
-
-            } catch (error) {
-
-                console.error(
-                    '❌ Regras:',
-                    error
-                );
-
-            }
-
-        }
-
-
-        // ==============================================
-        // 🎫 PAINÉIS
-        // ==============================================
-
-        await sendTicketPanel();
-
-        await sendRecruitmentPanel();
-
     }
-);
+
+
+    // ==================================================
+    // 📜 PAINÉIS
+    // ==================================================
+
+    await sendRulesPanel();
+
+    await sendTicketPanel();
+
+    await sendRecruitmentPanel();
+
+});
 
 
 // ======================================================
-// 🧠 INTERAÇÕES
+// 🧠 TODAS AS INTERAÇÕES
 // ======================================================
 
-client.on(
-    'interactionCreate',
-    async interaction => {
+client.on('interactionCreate', async interaction => {
 
-        try {
-
-            // ==================================================
-            // ⚔️ SLASH COMMANDS
-            // ==================================================
-
-            if (
-                interaction.isChatInputCommand()
-            ) {
-
-                // ==========================================
-                // /TEAM
-                // ==========================================
-
-                if (
-                    interaction.commandName ===
-                    'team'
-                ) {
-
-                    await interaction
-                        .guild
-                        .members
-                        .fetch();
+    try {
 
 
-                    const roleMembers =
-                        names => {
+// ======================================================
+// ⚔️ SLASH COMMANDS
+// ======================================================
 
-                            const members =
-                                new Map();
+        if (interaction.isChatInputCommand()) {
 
 
-                            interaction
-                                .guild
-                                .roles
-                                .cache
-                                .filter(
-                                    role =>
-                                        names.includes(
-                                            role.name
-                                                .toLowerCase()
-                                        )
-                                )
-                                .forEach(
-                                    role => {
+// ======================================================
+// 👥 /TEAM
+// ======================================================
 
-                                        role.members
-                                            .forEach(
-                                                member =>
+            if (interaction.commandName === 'team') {
 
-                                                    members.set(
-                                                        member.id,
-                                                        member
-                                                    )
+                await interaction.guild.members.fetch();
 
-                                            );
 
-                                    }
+                const getMembers = names => {
+
+                    const members = new Map();
+
+
+                    interaction.guild.roles.cache
+
+                        .filter(role =>
+                            names.includes(
+                                role.name.toLowerCase()
+                            )
+                        )
+
+                        .forEach(role => {
+
+                            role.members.forEach(member => {
+
+                                members.set(
+                                    member.id,
+                                    member
                                 );
 
-
-                            return [
-                                ...members.values()
-                            ];
-
-                        };
-
-
-                    const owners =
-                        roleMembers([
-                            'owner',
-                            'owners'
-                        ]);
-
-
-                    const admins =
-                        roleMembers([
-                            'admin',
-                            'admins',
-                            'administrator'
-                        ]);
-
-
-                    const staffs =
-                        roleMembers([
-                            'staff',
-                            'staffs',
-                            'moderador',
-                            'moderator'
-                        ]);
-
-
-                    const format =
-                        members =>
-                            members.length
-                                ? members
-                                    .map(
-                                        m =>
-                                            `• ${m}`
-                                    )
-                                    .join('\n')
-                                : '• Nenhum membro';
-
-
-                    const container =
-                        new ContainerBuilder()
-
-                            .setAccentColor(
-                                0x009DFF
-                            )
-
-                            .addTextDisplayComponents(
-
-                                new TextDisplayBuilder()
-                                    .setContent(
-`# 🐺 HUSHPVP TEAM
-
-# 👑 OWNER
-${format(owners)}
-
-# 🛡️ ADMIN
-${format(admins)}
-
-# ⚔️ STAFF
-${format(staffs)}
-
-> 💙 HushPvP • Equipe Oficial`
-                                    )
-
-                            );
-
-
-                    return interaction.reply({
-
-                        components: [
-                            container
-                        ],
-
-                        flags:
-                            MessageFlags.IsComponentsV2
-
-                    });
-
-                }
-
-
-                // ==========================================
-                // 🟢 STATUS ONLINE
-                // ==========================================
-
-                if (
-                    interaction.commandName ===
-                    'statuson'
-                ) {
-
-                    if (
-                        !isAdmin(
-                            interaction.member
-                        )
-                    ) {
-
-                        return interaction.reply({
-
-                            content:
-                                '❌ Apenas Owner/Admin.',
-
-                            ephemeral:
-                                true
+                            });
 
                         });
 
+
+                    return [
+                        ...members.values()
+                    ];
+                };
+
+
+                const owners = getMembers([
+                    'owner',
+                    'owners'
+                ]);
+
+
+                const admins = getMembers([
+                    'admin',
+                    'admins',
+                    'administrator'
+                ]);
+
+
+                const staffs = getMembers([
+                    'staff',
+                    'staffs',
+                    'moderador',
+                    'moderadores',
+                    'moderator',
+                    'moderators'
+                ]);
+
+
+                const formatMembers = members => {
+
+                    if (!members.length) {
+                        return '• Nenhum membro';
                     }
 
+                    return members
+                        .map(member =>
+                            `• ${member}`
+                        )
+                        .join('\n');
 
-                    const container =
-                        new ContainerBuilder()
+                };
 
-                            .setAccentColor(
-                                0x00FF7F
-                            )
 
-                            .addTextDisplayComponents(
+                const container = new ContainerBuilder()
 
-                                new TextDisplayBuilder()
-                                    .setContent(
-`# 🟢 HUSHPVP STATUS
+                    .setAccentColor(0x7B2EFF)
+
+                    .addTextDisplayComponents(
+
+                        new TextDisplayBuilder().setContent(
+`# ⭐ ASTER TEAM
+
+# 👑 OWNER
+
+${formatMembers(owners)}
+
+# 🛡️ ADMIN
+
+${formatMembers(admins)}
+
+# ⚔️ STAFF
+
+${formatMembers(staffs)}
+
+> ⭐ Aster • Equipe Oficial`
+                        )
+
+                    );
+
+
+                return interaction.reply({
+
+                    components: [container],
+
+                    flags:
+                        MessageFlags.IsComponentsV2
+
+                });
+            }
+
+
+// ======================================================
+// 🟢 /STATUSON
+// ======================================================
+
+            if (
+                interaction.commandName ===
+                'statuson'
+            ) {
+
+                if (!isAdmin(interaction.member)) {
+
+                    return interaction.reply({
+
+                        content:
+                            '❌ Apenas Owner/Admin pode usar este comando.',
+
+                        ephemeral: true
+
+                    });
+                }
+
+
+                const container = new ContainerBuilder()
+
+                    .setAccentColor(0x00FF7F)
+
+                    .addTextDisplayComponents(
+
+                        new TextDisplayBuilder().setContent(
+`# 🟢 ASTER STATUS
 
 ## ✅ SERVIDOR ONLINE
 
-O servidor Minecraft do **HushPvP** está ligado!
+O servidor Minecraft do **Aster** está ligado e disponível!
 
 🎮 **Status:** \`ONLINE\`
 
-⚡ Entre agora e venha jogar!
+⚡ O servidor está pronto para receber jogadores.
 
-> 🐺 HushPvP • Server Status`
-                                    )
+> ⭐ Aster • Server Status`
+                        )
 
-                            );
+                    );
 
+
+                return interaction.reply({
+
+                    components: [container],
+
+                    flags:
+                        MessageFlags.IsComponentsV2
+
+                });
+            }
+
+
+// ======================================================
+// 🔴 /STATUSOFF
+// ======================================================
+
+            if (
+                interaction.commandName ===
+                'statusoff'
+            ) {
+
+                if (!isAdmin(interaction.member)) {
 
                     return interaction.reply({
 
-                        components: [
-                            container
-                        ],
+                        content:
+                            '❌ Apenas Owner/Admin pode usar este comando.',
 
-                        flags:
-                            MessageFlags.IsComponentsV2
+                        ephemeral: true
 
                     });
-
                 }
 
 
-                // ==========================================
-                // 🔴 STATUS OFFLINE
-                // ==========================================
+                const container = new ContainerBuilder()
 
-                if (
-                    interaction.commandName ===
-                    'statusoff'
-                ) {
+                    .setAccentColor(0xFF0000)
 
-                    if (
-                        !isAdmin(
-                            interaction.member
-                        )
-                    ) {
+                    .addTextDisplayComponents(
 
-                        return interaction.reply({
-
-                            content:
-                                '❌ Apenas Owner/Admin.',
-
-                            ephemeral:
-                                true
-
-                        });
-
-                    }
-
-
-                    const container =
-                        new ContainerBuilder()
-
-                            .setAccentColor(
-                                0xFF0000
-                            )
-
-                            .addTextDisplayComponents(
-
-                                new TextDisplayBuilder()
-                                    .setContent(
-`# 🔴 HUSHPVP STATUS
+                        new TextDisplayBuilder().setContent(
+`# 🔴 ASTER STATUS
 
 ## ❌ SERVIDOR OFFLINE
 
-O servidor Minecraft do **HushPvP** está desligado ou em manutenção.
+O servidor Minecraft do **Aster** está desligado ou indisponível no momento.
 
 🎮 **Status:** \`OFFLINE\`
 
 🔧 Aguarde até o servidor retornar.
 
-> 🐺 HushPvP • Server Status`
-                                    )
+> ⭐ Aster • Server Status`
+                        )
 
-                            );
+                    );
 
+
+                return interaction.reply({
+
+                    components: [container],
+
+                    flags:
+                        MessageFlags.IsComponentsV2
+
+                });
+            }
+
+
+// ======================================================
+// 🔨 /BAN
+// ======================================================
+
+            if (interaction.commandName === 'ban') {
+
+                if (
+                    !interaction.member.permissions.has(
+                        PermissionFlagsBits.BanMembers
+                    )
+                ) {
 
                     return interaction.reply({
 
-                        components: [
-                            container
-                        ],
+                        content:
+                            '❌ Você não possui permissão para banir membros.',
 
-                        flags:
-                            MessageFlags.IsComponentsV2
+                        ephemeral: true
 
                     });
-
                 }
 
 
-                // ==========================================
-                // 🔨 /BAN
-                // ==========================================
+                const user =
+                    interaction.options.getUser(
+                        'usuario'
+                    );
+
+
+                const reason =
+                    interaction.options.getString(
+                        'motivo'
+                    );
+
 
                 if (
-                    interaction.commandName ===
-                    'ban'
+                    user.id ===
+                    interaction.user.id
                 ) {
 
-                    if (
-                        !interaction.member.permissions.has(
-                            PermissionFlagsBits.BanMembers
-                        )
-                    ) {
+                    return interaction.reply({
 
-                        return interaction.reply({
+                        content:
+                            '❌ Você não pode banir você mesmo.',
 
-                            content:
-                                '❌ Você não possui permissão para banir membros.',
+                        ephemeral: true
 
-                            ephemeral:
-                                true
-
-                        });
-
-                    }
+                    });
+                }
 
 
-                    const user =
-                        interaction.options.getUser(
-                            'usuario'
-                        );
+                const targetMember =
+                    await interaction.guild.members
+                        .fetch(user.id)
+                        .catch(() => null);
 
 
-                    const reason =
-                        interaction.options.getString(
-                            'motivo'
-                        );
+                if (
+                    targetMember &&
+                    !targetMember.bannable
+                ) {
+
+                    return interaction.reply({
+
+                        content:
+                            '❌ Não consigo banir esse membro. Verifique a posição dos cargos do bot.',
+
+                        ephemeral: true
+
+                    });
+                }
 
 
-                    if (
-                        user.id ===
-                        interaction.user.id
-                    ) {
+                // DM ANTES DO BAN
+                try {
 
-                        return interaction.reply({
-
-                            content:
-                                '❌ Você não pode se banir.',
-
-                            ephemeral:
-                                true
-
-                        });
-
-                    }
-
-
-                    try {
-
-                        await user.send(
+                    await user.send(
 `# 🔨 VOCÊ FOI BANIDO
 
-Você foi banido do servidor **HushPvP**.
+Você foi banido do servidor **Aster**.
 
-👮 **Staff:** ${interaction.user}
+👮 **Staff responsável:** ${interaction.user}
 
 📋 **Motivo:** ${reason}
 
-> 🐺 HushPvP • Moderation`
-                        );
+🔴 **Punição:** BAN
 
-                    } catch {}
+> ⭐ Aster • Moderation`
+                    );
 
-
-                    await interaction.guild
-                        .members
-                        .ban(
-                            user.id,
-                            {
-                                reason:
-                                    `${reason} | Staff: ${interaction.user.tag}`
-                            }
-                        );
+                } catch {}
 
 
-                    const container =
-                        new ContainerBuilder()
+                await interaction.guild.members.ban(
+                    user.id,
+                    {
+                        reason:
+                            `${reason} | Staff: ${interaction.user.tag}`
+                    }
+                );
 
-                            .setAccentColor(
-                                0xFF0000
-                            )
 
-                            .addTextDisplayComponents(
+                const container = new ContainerBuilder()
 
-                                new TextDisplayBuilder()
-                                    .setContent(
+                    .setAccentColor(0xFF0000)
+
+                    .addTextDisplayComponents(
+
+                        new TextDisplayBuilder().setContent(
 `# 🔨 USUÁRIO BANIDO
 
 👤 **Usuário:** ${user}
@@ -1584,119 +1243,141 @@ Você foi banido do servidor **HushPvP**.
 
 🔴 **Punição:** BAN
 
-> 🐺 HushPvP • Moderation`
-                                    )
+> ⭐ Aster • Moderation`
+                        )
 
-                            );
-
-
-                    return interaction.reply({
-
-                        components: [
-                            container
-                        ],
-
-                        flags:
-                            MessageFlags.IsComponentsV2
-
-                    });
-
-                }
-
-
-                // ==========================================
-                // 👢 /KICK
-                // ==========================================
-
-                if (
-                    interaction.commandName ===
-                    'kick'
-                ) {
-
-                    const member =
-                        interaction.options
-                            .getMember(
-                                'usuario'
-                            );
-
-
-                    const reason =
-                        interaction.options
-                            .getString(
-                                'motivo'
-                            );
-
-
-                    if (
-                        !member
-                    ) {
-
-                        return interaction.reply({
-
-                            content:
-                                '❌ Usuário não encontrado no servidor.',
-
-                            ephemeral:
-                                true
-
-                        });
-
-                    }
-
-
-                    if (
-                        !member.kickable
-                    ) {
-
-                        return interaction.reply({
-
-                            content:
-                                '❌ Não consigo expulsar esse membro. Confira a posição dos cargos.',
-
-                            ephemeral:
-                                true
-
-                        });
-
-                    }
-
-
-                    try {
-
-                        await member.send(
-`# 👢 VOCÊ FOI EXPULSO
-
-Você foi expulso do **HushPvP**.
-
-👮 **Staff:** ${interaction.user}
-
-📋 **Motivo:** ${reason}
-
-> 🐺 HushPvP • Moderation`
-                        );
-
-                    } catch {}
-
-
-                    await member.kick(
-                        `${reason} | ${interaction.user.tag}`
                     );
 
 
-                    const container =
-                        new ContainerBuilder()
+                return interaction.reply({
 
-                            .setAccentColor(
-                                0xFF8C00
-                            )
+                    components: [container],
 
-                            .addTextDisplayComponents(
+                    flags:
+                        MessageFlags.IsComponentsV2
 
-                                new TextDisplayBuilder()
-                                    .setContent(
+                });
+            }
+
+
+// ======================================================
+// 👢 /KICK
+// ======================================================
+
+            if (
+                interaction.commandName ===
+                'kick'
+            ) {
+
+                if (
+                    !interaction.member.permissions.has(
+                        PermissionFlagsBits.KickMembers
+                    )
+                ) {
+
+                    return interaction.reply({
+
+                        content:
+                            '❌ Você não possui permissão para expulsar membros.',
+
+                        ephemeral: true
+
+                    });
+                }
+
+
+                const member =
+                    interaction.options.getMember(
+                        'usuario'
+                    );
+
+
+                const reason =
+                    interaction.options.getString(
+                        'motivo'
+                    );
+
+
+                if (!member) {
+
+                    return interaction.reply({
+
+                        content:
+                            '❌ Usuário não encontrado no servidor.',
+
+                        ephemeral: true
+
+                    });
+                }
+
+
+                if (
+                    member.id ===
+                    interaction.user.id
+                ) {
+
+                    return interaction.reply({
+
+                        content:
+                            '❌ Você não pode expulsar você mesmo.',
+
+                        ephemeral: true
+
+                    });
+                }
+
+
+                if (!member.kickable) {
+
+                    return interaction.reply({
+
+                        content:
+                            '❌ Não consigo expulsar esse membro. Verifique os cargos.',
+
+                        ephemeral: true
+
+                    });
+                }
+
+
+                try {
+
+                    await member.send(
+`# 👢 VOCÊ FOI EXPULSO
+
+Você foi expulso do servidor **Aster**.
+
+👮 **Staff responsável:** ${interaction.user}
+
+📋 **Motivo:** ${reason}
+
+🟠 **Punição:** KICK
+
+> ⭐ Aster • Moderation`
+                    );
+
+                } catch {}
+
+
+                const memberTag =
+                    member.user.tag;
+
+
+                await member.kick(
+                    `${reason} | Staff: ${interaction.user.tag}`
+                );
+
+
+                const container = new ContainerBuilder()
+
+                    .setAccentColor(0xFF8C00)
+
+                    .addTextDisplayComponents(
+
+                        new TextDisplayBuilder().setContent(
 `# 👢 USUÁRIO EXPULSO
 
-👤 **Usuário:** ${member.user.tag}
+👤 **Usuário:** ${memberTag}
 
 👮 **Staff:** ${interaction.user}
 
@@ -1704,171 +1385,183 @@ Você foi expulso do **HushPvP**.
 
 🟠 **Punição:** KICK
 
-> 🐺 HushPvP • Moderation`
-                                    )
+> ⭐ Aster • Moderation`
+                        )
 
-                            );
-
-
-                    return interaction.reply({
-
-                        components: [
-                            container
-                        ],
-
-                        flags:
-                            MessageFlags.IsComponentsV2
-
-                    });
-
-                }
-
-
-                // ==========================================
-                // 🔇 /MUTE
-                // ==========================================
-
-                if (
-                    interaction.commandName ===
-                    'mute'
-                ) {
-
-                    const member =
-                        interaction.options
-                            .getMember(
-                                'usuario'
-                            );
-
-
-                    const time =
-                        interaction.options
-                            .getString(
-                                'tempo'
-                            );
-
-
-                    const reason =
-                        interaction.options
-                            .getString(
-                                'motivo'
-                            );
-
-
-                    if (!member) {
-
-                        return interaction.reply({
-
-                            content:
-                                '❌ Usuário não encontrado.',
-
-                            ephemeral:
-                                true
-
-                        });
-
-                    }
-
-
-                    const duration =
-                        parseDuration(
-                            time
-                        );
-
-
-                    if (!duration) {
-
-                        return interaction.reply({
-
-                            content:
-                                '❌ Tempo inválido. Use `10m`, `1h`, `1d` etc.',
-
-                            ephemeral:
-                                true
-
-                        });
-
-                    }
-
-
-                    const MAX_TIMEOUT =
-                        28 *
-                        24 *
-                        60 *
-                        60 *
-                        1000;
-
-
-                    if (
-                        duration >
-                        MAX_TIMEOUT
-                    ) {
-
-                        return interaction.reply({
-
-                            content:
-                                '❌ O mute máximo do Discord é de 28 dias.',
-
-                            ephemeral:
-                                true
-
-                        });
-
-                    }
-
-
-                    if (
-                        !member.moderatable
-                    ) {
-
-                        return interaction.reply({
-
-                            content:
-                                '❌ Não consigo mutar esse membro. Verifique os cargos.',
-
-                            ephemeral:
-                                true
-
-                        });
-
-                    }
-
-
-                    await member.timeout(
-                        duration,
-                        `${reason} | ${interaction.user.tag}`
                     );
 
 
-                    try {
+                return interaction.reply({
 
-                        await member.send(
+                    components: [container],
+
+                    flags:
+                        MessageFlags.IsComponentsV2
+
+                });
+            }
+
+
+// ======================================================
+// 🔇 /MUTE
+// ======================================================
+
+            if (
+                interaction.commandName ===
+                'mute'
+            ) {
+
+                if (
+                    !interaction.member.permissions.has(
+                        PermissionFlagsBits.ModerateMembers
+                    )
+                ) {
+
+                    return interaction.reply({
+
+                        content:
+                            '❌ Você não possui permissão para mutar membros.',
+
+                        ephemeral: true
+
+                    });
+                }
+
+
+                const member =
+                    interaction.options.getMember(
+                        'usuario'
+                    );
+
+
+                const time =
+                    interaction.options.getString(
+                        'tempo'
+                    );
+
+
+                const reason =
+                    interaction.options.getString(
+                        'motivo'
+                    );
+
+
+                if (!member) {
+
+                    return interaction.reply({
+
+                        content:
+                            '❌ Usuário não encontrado.',
+
+                        ephemeral: true
+
+                    });
+                }
+
+
+                if (
+                    member.id ===
+                    interaction.user.id
+                ) {
+
+                    return interaction.reply({
+
+                        content:
+                            '❌ Você não pode mutar você mesmo.',
+
+                        ephemeral: true
+
+                    });
+                }
+
+
+                const duration =
+                    parseDuration(time);
+
+
+                if (!duration) {
+
+                    return interaction.reply({
+
+                        content:
+                            '❌ Tempo inválido. Exemplos: `10m`, `1h`, `2d`.',
+
+                        ephemeral: true
+
+                    });
+                }
+
+
+                const MAX_TIMEOUT =
+                    28 *
+                    24 *
+                    60 *
+                    60 *
+                    1000;
+
+
+                if (
+                    duration > MAX_TIMEOUT
+                ) {
+
+                    return interaction.reply({
+
+                        content:
+                            '❌ O mute máximo permitido pelo Discord é de 28 dias.',
+
+                        ephemeral: true
+
+                    });
+                }
+
+
+                if (!member.moderatable) {
+
+                    return interaction.reply({
+
+                        content:
+                            '❌ Não consigo mutar esse membro. Verifique os cargos.',
+
+                        ephemeral: true
+
+                    });
+                }
+
+
+                await member.timeout(
+                    duration,
+                    `${reason} | Staff: ${interaction.user.tag}`
+                );
+
+
+                try {
+
+                    await member.send(
 `# 🔇 VOCÊ FOI MUTADO
 
-Você recebeu um mute no **HushPvP**.
+Você recebeu um mute no servidor **Aster**.
 
 ⏰ **Tempo:** ${time}
 
-👮 **Staff:** ${interaction.user}
+👮 **Staff responsável:** ${interaction.user}
 
 📋 **Motivo:** ${reason}
 
-> 🐺 HushPvP • Moderation`
-                        );
+🟡 **Punição:** MUTE
 
-                    } catch {}
+> ⭐ Aster • Moderation`
+                    );
+
+                } catch {}
 
 
-                    const container =
-                        new ContainerBuilder()
+                const container = new ContainerBuilder()
 
-                            .setAccentColor(
-                                0xFFD700
-                            )
+                    .setAccentColor(0xFFD700)
 
-                            .addTextDisplayComponents(
+                    .addTextDisplayComponents(
 
-                                new TextDisplayBuilder()
-                                    .setContent(
+                        new TextDisplayBuilder().setContent(
 `# 🔇 USUÁRIO MUTADO
 
 👤 **Usuário:** ${member}
@@ -1881,627 +1574,1346 @@ Você recebeu um mute no **HushPvP**.
 
 🟡 **Punição:** MUTE
 
-> 🐺 HushPvP • Moderation`
-                                    )
+> ⭐ Aster • Moderation`
+                        )
 
-                            );
-
-
-                    return interaction.reply({
-
-                        components: [
-                            container
-                        ],
-
-                        flags:
-                            MessageFlags.IsComponentsV2
-
-                    });
-
-                }
-
-
-                // ==========================================
-                // 🔊 /UNMUTE
-                // ==========================================
-
-                if (
-                    interaction.commandName ===
-                    'unmute'
-                ) {
-
-                    const member =
-                        interaction.options
-                            .getMember(
-                                'usuario'
-                            );
-
-
-                    if (!member) {
-
-                        return interaction.reply({
-
-                            content:
-                                '❌ Usuário não encontrado.',
-
-                            ephemeral:
-                                true
-
-                        });
-
-                    }
-
-
-                    if (
-                        !member.moderatable
-                    ) {
-
-                        return interaction.reply({
-
-                            content:
-                                '❌ Não consigo remover o mute desse membro.',
-
-                            ephemeral:
-                                true
-
-                        });
-
-                    }
-
-
-                    await member.timeout(
-                        null,
-                        `Unmute por ${interaction.user.tag}`
                     );
-
-
-                    return interaction.reply({
-
-                        content:
-                            `🔊 ${member} teve o mute removido por ${interaction.user}.`
-
-                    });
-
-                }
-
-            }
-
-
-// ======================================================
-// 🎫 BOTÃO "INICIAR TICKET"
-// ======================================================
-
-            if (
-                interaction.isButton() &&
-                interaction.customId ===
-                'ticket_start'
-            ) {
-
-                // ==========================================
-                // 🚫 VERIFICAR TICKET EXISTENTE
-                // ==========================================
-
-                const existing =
-                    interaction.guild
-                        .channels
-                        .cache
-                        .find(
-
-                            channel =>
-
-                                channel.type ===
-                                    ChannelType.GuildText &&
-
-                                channel.topic &&
-                                channel.topic.includes(
-                                    `ticket-owner:${interaction.user.id}`
-                                )
-
-                        );
-
-
-                if (
-                    existing
-                ) {
-
-                    return interaction.reply({
-
-                        content:
-                            `⚠️ Você já possui um ticket aberto: ${existing}`,
-
-                        ephemeral:
-                            true
-
-                    });
-
-                }
-
-
-                // ==========================================
-                // 📂 MENU
-                // ==========================================
-
-                const menu =
-                    new StringSelectMenuBuilder()
-
-                        .setCustomId(
-                            'ticket_type'
-                        )
-
-                        .setPlaceholder(
-                            'Escolha o motivo do ticket'
-                        )
-
-                        .addOptions(
-
-                            {
-
-                                label:
-                                    'Support',
-
-                                description:
-                                    'Problemas gerais no servidor',
-
-                                value:
-                                    'support',
-
-                                emoji:
-                                    '🎫'
-
-                            },
-
-                            {
-
-                                label:
-                                    'Ajuda',
-
-                                description:
-                                    'Preciso de ajuda da equipe',
-
-                                value:
-                                    'ajuda',
-
-                                emoji:
-                                    '🆘'
-
-                            },
-
-                            {
-
-                                label:
-                                    'Dúvida',
-
-                                description:
-                                    'Tenho uma dúvida',
-
-                                value:
-                                    'duvida',
-
-                                emoji:
-                                    '❓'
-
-                            }
-
-                        );
-
-
-                const row =
-                    new ActionRowBuilder()
-                        .addComponents(
-                            menu
-                        );
 
 
                 return interaction.reply({
 
-                    content:
-                        '🐺 **HushPvP Support**\n\nEscolha o motivo do seu atendimento:',
+                    components: [container],
 
-                    components: [
-                        row
-                    ],
-
-                    ephemeral:
-                        true
+                    flags:
+                        MessageFlags.IsComponentsV2
 
                 });
-
             }
 
 
 // ======================================================
-// 📂 SELECIONAR TIPO DO TICKET
+// 🔊 /UNMUTE
 // ======================================================
 
             if (
-                interaction.isStringSelectMenu() &&
-                interaction.customId ===
-                'ticket_type'
+                interaction.commandName ===
+                'unmute'
             ) {
-
-                const type =
-                    interaction.values[0];
-
-
-                ticketSelections.set(
-                    interaction.user.id,
-                    type
-                );
-
-
-                // ==========================================
-                // 🪟 POP-UP
-                // ==========================================
-
-                const modal =
-                    new ModalBuilder()
-
-                        .setCustomId(
-                            'ticket_modal'
-                        )
-
-                        .setTitle(
-                            'HushPvP • Abrir Ticket'
-                        );
-
-
-                const titleInput =
-                    new TextInputBuilder()
-
-                        .setCustomId(
-                            'ticket_subject'
-                        )
-
-                        .setLabel(
-                            'Qual o assunto?'
-                        )
-
-                        .setPlaceholder(
-                            'Ex: Problema para entrar no servidor'
-                        )
-
-                        .setStyle(
-                            TextInputStyle.Short
-                        )
-
-                        .setRequired(
-                            true
-                        )
-
-                        .setMaxLength(
-                            100
-                        );
-
-
-                const descriptionInput =
-                    new TextInputBuilder()
-
-                        .setCustomId(
-                            'ticket_description'
-                        )
-
-                        .setLabel(
-                            'Explique o que aconteceu'
-                        )
-
-                        .setPlaceholder(
-                            'Conte todos os detalhes para nossa equipe...'
-                        )
-
-                        .setStyle(
-                            TextInputStyle.Paragraph
-                        )
-
-                        .setRequired(
-                            true
-                        )
-
-                        .setMaxLength(
-                            1000
-                        );
-
-
-                const row1 =
-                    new ActionRowBuilder()
-                        .addComponents(
-                            titleInput
-                        );
-
-
-                const row2 =
-                    new ActionRowBuilder()
-                        .addComponents(
-                            descriptionInput
-                        );
-
-
-                modal.addComponents(
-                    row1,
-                    row2
-                );
-
-
-                return interaction.showModal(
-                    modal
-                );
-
-            }
-
-
-// ======================================================
-// 🪟 CRIAR TICKET DEPOIS DO POP-UP
-// ======================================================
-
-            if (
-                interaction.isModalSubmit() &&
-                interaction.customId ===
-                'ticket_modal'
-            ) {
-
-                await interaction.deferReply({
-
-                    ephemeral:
-                        true
-
-                });
-
-
-                const type =
-                    ticketSelections.get(
-                        interaction.user.id
-                    ) || 'support';
-
-
-                const subject =
-                    interaction.fields
-                        .getTextInputValue(
-                            'ticket_subject'
-                        );
-
-
-                const description =
-                    interaction.fields
-                        .getTextInputValue(
-                            'ticket_description'
-                        );
-
-
-                const existing =
-                    interaction.guild
-                        .channels
-                        .cache
-                        .find(
-
-                            channel =>
-
-                                channel.type ===
-                                    ChannelType.GuildText &&
-
-                                channel.topic &&
-                                channel.topic.includes(
-                                    `ticket-owner:${interaction.user.id}`
-                                )
-
-                        );
-
 
                 if (
-                    existing
+                    !interaction.member.permissions.has(
+                        PermissionFlagsBits.ModerateMembers
+                    )
                 ) {
 
-                    return interaction.editReply({
+                    return interaction.reply({
 
                         content:
-                            `⚠️ Você já possui um ticket: ${existing}`
+                            '❌ Você não possui permissão para remover mutes.',
+
+                        ephemeral: true
 
                     });
-
                 }
 
 
-                const category =
-                    await getTicketCategory(
-                        interaction.guild
+                const member =
+                    interaction.options.getMember(
+                        'usuario'
                     );
 
 
-                // ==========================================
-                // 🛡️ PEGAR CARGOS STAFF
-                // ==========================================
+                if (!member) {
 
-                const staffRoles =
-                    interaction.guild
-                        .roles
-                        .cache
-                        .filter(
+                    return interaction.reply({
 
-                            role =>
-                                STAFF_ROLE_NAMES.includes(
-                                    role.name.toLowerCase()
-                                )
+                        content:
+                            '❌ Usuário não encontrado.',
 
+                        ephemeral: true
+
+                    });
+                }
+
+
+                if (!member.moderatable) {
+
+                    return interaction.reply({
+
+                        content:
+                            '❌ Não consigo remover o mute deste membro.',
+
+                        ephemeral: true
+
+                    });
+                }
+
+
+                await member.timeout(
+                    null,
+                    `Unmute por ${interaction.user.tag}`
+                );
+
+
+                try {
+
+                    await member.send(
+`# 🔊 MUTE REMOVIDO
+
+Seu mute no servidor **Aster** foi removido.
+
+👮 **Staff responsável:** ${interaction.user}
+
+🟢 **Status:** LIBERADO
+
+> ⭐ Aster • Moderation`
+                    );
+
+                } catch {}
+
+
+                const container = new ContainerBuilder()
+
+                    .setAccentColor(0x00FF7F)
+
+                    .addTextDisplayComponents(
+
+                        new TextDisplayBuilder().setContent(
+`# 🔊 MUTE REMOVIDO
+
+👤 **Usuário:** ${member}
+
+👮 **Staff:** ${interaction.user}
+
+🟢 **Status:** LIBERADO
+
+> ⭐ Aster • Moderation`
+                        )
+
+                    );
+
+
+                return interaction.reply({
+
+                    components: [container],
+
+                    flags:
+                        MessageFlags.IsComponentsV2
+
+                });
+            }
+
+        }
+
+
+// ======================================================
+// 🎫 BOTÃO INICIAR TICKET
+// ======================================================
+
+        if (
+            interaction.isButton() &&
+            interaction.customId ===
+            'ticket_start'
+        ) {
+
+            const existing =
+                interaction.guild.channels.cache.find(
+                    channel =>
+
+                        channel.type ===
+                            ChannelType.GuildText &&
+
+                        channel.topic?.includes(
+                            `ticket-owner:${interaction.user.id}`
+                        )
+                );
+
+
+            if (existing) {
+
+                return interaction.reply({
+
+                    content:
+                        `⚠️ Você já possui um ticket aberto: ${existing}`,
+
+                    ephemeral: true
+
+                });
+            }
+
+
+            const menu =
+                new StringSelectMenuBuilder()
+
+                    .setCustomId(
+                        'ticket_type'
+                    )
+
+                    .setPlaceholder(
+                        'Escolha o tipo de atendimento'
+                    )
+
+                    .addOptions(
+
+                        {
+                            label: 'Support',
+
+                            description:
+                                'Problemas gerais no servidor',
+
+                            value:
+                                'support',
+
+                            emoji: '🎫'
+                        },
+
+                        {
+                            label: 'Ajuda',
+
+                            description:
+                                'Preciso da ajuda da equipe',
+
+                            value:
+                                'ajuda',
+
+                            emoji: '🆘'
+                        },
+
+                        {
+                            label: 'Dúvida',
+
+                            description:
+                                'Tenho uma dúvida',
+
+                            value:
+                                'duvida',
+
+                            emoji: '❓'
+                        }
+
+                    );
+
+
+            const row =
+                new ActionRowBuilder()
+                    .addComponents(menu);
+
+
+            return interaction.reply({
+
+                content:
+`⭐ **ASTER SUPPORT**
+
+Selecione abaixo o motivo do seu atendimento:`,
+
+                components: [row],
+
+                ephemeral: true
+
+            });
+        }
+
+
+// ======================================================
+// 📂 ESCOLHEU O TIPO
+// ======================================================
+
+        if (
+            interaction.isStringSelectMenu() &&
+            interaction.customId ===
+            'ticket_type'
+        ) {
+
+            const type =
+                interaction.values[0];
+
+
+            ticketSelections.set(
+                interaction.user.id,
+                type
+            );
+
+
+            // POP-UP
+            const modal =
+                new ModalBuilder()
+
+                    .setCustomId(
+                        'ticket_modal'
+                    )
+
+                    .setTitle(
+                        'Aster • Abrir Ticket'
+                    );
+
+
+            const subjectInput =
+                new TextInputBuilder()
+
+                    .setCustomId(
+                        'ticket_subject'
+                    )
+
+                    .setLabel(
+                        'Qual é o assunto?'
+                    )
+
+                    .setPlaceholder(
+                        'Ex: Problema para entrar no servidor'
+                    )
+
+                    .setStyle(
+                        TextInputStyle.Short
+                    )
+
+                    .setRequired(true)
+
+                    .setMaxLength(100);
+
+
+            const descriptionInput =
+                new TextInputBuilder()
+
+                    .setCustomId(
+                        'ticket_description'
+                    )
+
+                    .setLabel(
+                        'Explique o que aconteceu'
+                    )
+
+                    .setPlaceholder(
+                        'Explique com detalhes para nossa equipe...'
+                    )
+
+                    .setStyle(
+                        TextInputStyle.Paragraph
+                    )
+
+                    .setRequired(true)
+
+                    .setMaxLength(1000);
+
+
+            modal.addComponents(
+
+                new ActionRowBuilder()
+                    .addComponents(
+                        subjectInput
+                    ),
+
+                new ActionRowBuilder()
+                    .addComponents(
+                        descriptionInput
+                    )
+
+            );
+
+
+            return interaction.showModal(
+                modal
+            );
+        }
+
+
+// ======================================================
+// 🪟 ENVIOU O POP-UP — CRIAR TICKET
+// ======================================================
+
+        if (
+            interaction.isModalSubmit() &&
+            interaction.customId ===
+            'ticket_modal'
+        ) {
+
+            await interaction.deferReply({
+                ephemeral: true
+            });
+
+
+            const existing =
+                interaction.guild.channels.cache.find(
+                    channel =>
+
+                        channel.type ===
+                            ChannelType.GuildText &&
+
+                        channel.topic?.includes(
+                            `ticket-owner:${interaction.user.id}`
+                        )
+                );
+
+
+            if (existing) {
+
+                return interaction.editReply({
+
+                    content:
+                        `⚠️ Você já possui um ticket: ${existing}`
+
+                });
+            }
+
+
+            const type =
+                ticketSelections.get(
+                    interaction.user.id
+                ) || 'support';
+
+
+            const subject =
+                interaction.fields
+                    .getTextInputValue(
+                        'ticket_subject'
+                    );
+
+
+            const description =
+                interaction.fields
+                    .getTextInputValue(
+                        'ticket_description'
+                    );
+
+
+// ======================================================
+// 📁 CATEGORIA DO ATENDIMENTO
+// ======================================================
+
+            const category =
+                await interaction.guild.channels.fetch(
+                    TICKET_CATEGORY_ID
+                );
+
+
+            if (
+                !category ||
+                category.type !==
+                    ChannelType.GuildCategory
+            ) {
+
+                return interaction.editReply({
+
+                    content:
+`❌ Não consegui criar o ticket.
+
+O ID \`${TICKET_CATEGORY_ID}\` precisa ser o ID de uma **categoria** do Discord.`
+
+                });
+            }
+
+
+// ======================================================
+// 🛡️ PERMISSÕES DOS CARGOS
+// ======================================================
+
+            const staffRoles =
+                interaction.guild.roles.cache.filter(
+                    role =>
+                        STAFF_ROLE_NAMES.includes(
+                            role.name.toLowerCase()
+                        )
+                );
+
+
+            const permissions = [
+
+                // @everyone NÃO VÊ
+                {
+                    id:
+                        interaction.guild.roles
+                            .everyone.id,
+
+                    deny: [
+                        PermissionFlagsBits.ViewChannel
+                    ]
+                },
+
+
+                // DONO DO TICKET
+                {
+                    id:
+                        interaction.user.id,
+
+                    allow: [
+                        PermissionFlagsBits.ViewChannel,
+                        PermissionFlagsBits.SendMessages,
+                        PermissionFlagsBits.ReadMessageHistory,
+                        PermissionFlagsBits.AttachFiles,
+                        PermissionFlagsBits.EmbedLinks
+                    ]
+                },
+
+
+                // BOT
+                {
+                    id:
+                        client.user.id,
+
+                    allow: [
+                        PermissionFlagsBits.ViewChannel,
+                        PermissionFlagsBits.SendMessages,
+                        PermissionFlagsBits.ReadMessageHistory,
+                        PermissionFlagsBits.ManageChannels,
+                        PermissionFlagsBits.ManageMessages
+                    ]
+                }
+
+            ];
+
+
+            // STAFF
+            staffRoles.forEach(role => {
+
+                permissions.push({
+
+                    id: role.id,
+
+                    allow: [
+                        PermissionFlagsBits.ViewChannel,
+                        PermissionFlagsBits.SendMessages,
+                        PermissionFlagsBits.ReadMessageHistory,
+                        PermissionFlagsBits.AttachFiles,
+                        PermissionFlagsBits.EmbedLinks
+                    ]
+
+                });
+
+            });
+
+
+            let safeName =
+                interaction.user.username
+                    .toLowerCase()
+                    .replace(
+                        /[^a-z0-9]/g,
+                        ''
+                    )
+                    .slice(0, 20);
+
+
+            if (!safeName) {
+                safeName =
+                    interaction.user.id;
+            }
+
+
+// ======================================================
+// 🎫 CRIAR CANAL
+// ======================================================
+
+            const ticketChannel =
+                await interaction.guild.channels.create({
+
+                    name:
+                        `ticket-${safeName}`,
+
+                    type:
+                        ChannelType.GuildText,
+
+                    parent:
+                        category.id,
+
+                    topic:
+                        `ticket-owner:${interaction.user.id}|type:${type}|status:open`,
+
+                    permissionOverwrites:
+                        permissions
+
+                });
+
+
+            ticketSelections.delete(
+                interaction.user.id
+            );
+
+
+            const typeNames = {
+
+                support:
+                    '🎫 SUPPORT',
+
+                ajuda:
+                    '🆘 AJUDA',
+
+                duvida:
+                    '❓ DÚVIDA'
+
+            };
+
+
+            const claimButton =
+                new ButtonBuilder()
+
+                    .setCustomId(
+                        'ticket_claim'
+                    )
+
+                    .setLabel(
+                        'Assumir Ticket'
+                    )
+
+                    .setEmoji('🛡️')
+
+                    .setStyle(
+                        ButtonStyle.Success
+                    );
+
+
+            const closeButton =
+                new ButtonBuilder()
+
+                    .setCustomId(
+                        'ticket_close'
+                    )
+
+                    .setLabel(
+                        'Fechar Ticket'
+                    )
+
+                    .setEmoji('🔒')
+
+                    .setStyle(
+                        ButtonStyle.Danger
+                    );
+
+
+            const buttons =
+                new ActionRowBuilder()
+
+                    .addComponents(
+                        claimButton,
+                        closeButton
+                    );
+
+
+            const container =
+                new ContainerBuilder()
+
+                    .setAccentColor(
+                        0x7B2EFF
+                    )
+
+                    .addTextDisplayComponents(
+
+                        new TextDisplayBuilder().setContent(
+`# ⭐ ASTER • NOVO TICKET
+
+## ${typeNames[type] || '🎫 SUPPORT'}
+
+👤 **Jogador:** ${interaction.user}
+
+📌 **Assunto:** ${subject}
+
+## 📝 DESCRIÇÃO
+
+${description}
+
+## 📊 STATUS
+
+🟢 **ABERTO**
+
+Aguarde até um membro da nossa equipe assumir seu atendimento.
+
+Você receberá uma **mensagem privada** quando uma Staff começar a atender.
+
+> ⭐ Aster • Support System`
+                        )
+
+                    )
+
+                    .addActionRowComponents(
+                        buttons
+                    );
+
+
+            await ticketChannel.send({
+
+                content:
+                    `${interaction.user}`,
+
+                components: [
+                    container
+                ],
+
+                flags:
+                    MessageFlags.IsComponentsV2
+
+            });
+
+
+            // DM DE CONFIRMAÇÃO
+            try {
+
+                await interaction.user.send(
+`# 🎫 TICKET CRIADO
+
+Seu ticket no **Aster** foi criado com sucesso!
+
+📌 **Assunto:** ${subject}
+
+📂 **Categoria:** ${typeNames[type] || 'Support'}
+
+🟢 **Status:** ABERTO
+
+Nossa equipe irá analisar seu atendimento.
+
+📩 Você receberá outra mensagem quando uma Staff assumir seu ticket.
+
+> ⭐ Aster • Support System`
+                );
+
+            } catch {}
+
+
+            return interaction.editReply({
+
+                content:
+                    `✅ Ticket criado com sucesso: ${ticketChannel}`
+
+            });
+        }
+
+
+// ======================================================
+// 🛡️ ASSUMIR TICKET
+// ======================================================
+
+        if (
+            interaction.isButton() &&
+            interaction.customId ===
+            'ticket_claim'
+        ) {
+
+            if (
+                !isStaff(
+                    interaction.member
+                )
+            ) {
+
+                return interaction.reply({
+
+                    content:
+                        '❌ Apenas membros da Staff podem assumir tickets.',
+
+                    ephemeral: true
+
+                });
+            }
+
+
+            const ownerId =
+                interaction.channel.topic
+                    ?.match(
+                        /ticket-owner:(\d+)/
+                    )?.[1];
+
+
+            if (!ownerId) {
+
+                return interaction.reply({
+
+                    content:
+                        '❌ Não consegui identificar o dono deste ticket.',
+
+                    ephemeral: true
+
+                });
+            }
+
+
+// ======================================================
+// 🚫 EVITAR DUAS STAFF ASSUMINDO
+// ======================================================
+
+            if (
+                interaction.channel.topic
+                    ?.includes(
+                        'status:claimed'
+                    )
+            ) {
+
+                return interaction.reply({
+
+                    content:
+                        '⚠️ Este ticket já foi assumido por outro membro da equipe.',
+
+                    ephemeral: true
+
+                });
+            }
+
+
+            await interaction.channel.setTopic(
+                interaction.channel.topic
+                    .replace(
+                        'status:open',
+                        `status:claimed|staff:${interaction.user.id}`
+                    )
+            );
+
+
+// ======================================================
+// 📩 DM PARA O PLAYER
+// ======================================================
+
+            let dmSent = true;
+
+
+            try {
+
+                const ticketOwner =
+                    await client.users.fetch(
+                        ownerId
+                    );
+
+
+                await ticketOwner.send(
+`# 🛡️ SEU TICKET ESTÁ SENDO ATENDIDO!
+
+Olá ${ticketOwner}!
+
+Um membro da equipe do **Aster** acabou de assumir seu ticket.
+
+👮 **Staff responsável:** ${interaction.user}
+
+🎫 **Ticket:** #${interaction.channel.name}
+
+🟢 **Status:** EM ATENDIMENTO
+
+Volte ao servidor para continuar a conversa com nossa equipe.
+
+> ⭐ Aster • Support System`
+                );
+
+            } catch {
+
+                dmSent = false;
+
+            }
+
+
+// ======================================================
+// 🛡️ AVISO NO CANAL
+// ======================================================
+
+            const claimedContainer =
+                new ContainerBuilder()
+
+                    .setAccentColor(
+                        0x00FF7F
+                    )
+
+                    .addTextDisplayComponents(
+
+                        new TextDisplayBuilder().setContent(
+`# 🛡️ TICKET ASSUMIDO
+
+👮 **Staff responsável:** ${interaction.user}
+
+🟢 **Status:** EM ATENDIMENTO
+
+${dmSent
+    ? '📩 O jogador foi avisado pela DM.'
+    : '⚠️ Não consegui enviar DM para o jogador.'}
+
+> ⭐ Aster • Support System`
+                        )
+
+                    );
+
+
+            return interaction.reply({
+
+                components: [
+                    claimedContainer
+                ],
+
+                flags:
+                    MessageFlags.IsComponentsV2
+
+            });
+        }
+
+
+// ======================================================
+// 🔒 FECHAR TICKET
+// ======================================================
+
+        if (
+            interaction.isButton() &&
+            interaction.customId ===
+            'ticket_close'
+        ) {
+
+            const ownerId =
+                interaction.channel.topic
+                    ?.match(
+                        /ticket-owner:(\d+)/
+                    )?.[1];
+
+
+            if (
+                interaction.user.id !== ownerId &&
+                !isStaff(interaction.member)
+            ) {
+
+                return interaction.reply({
+
+                    content:
+                        '❌ Apenas o jogador ou a Staff pode fechar este ticket.',
+
+                    ephemeral: true
+
+                });
+            }
+
+
+            const confirmButton =
+                new ButtonBuilder()
+
+                    .setCustomId(
+                        'ticket_close_confirm'
+                    )
+
+                    .setLabel(
+                        'Confirmar fechamento'
+                    )
+
+                    .setEmoji('✅')
+
+                    .setStyle(
+                        ButtonStyle.Danger
+                    );
+
+
+            const cancelButton =
+                new ButtonBuilder()
+
+                    .setCustomId(
+                        'ticket_close_cancel'
+                    )
+
+                    .setLabel(
+                        'Cancelar'
+                    )
+
+                    .setEmoji('❌')
+
+                    .setStyle(
+                        ButtonStyle.Secondary
+                    );
+
+
+            const row =
+                new ActionRowBuilder()
+
+                    .addComponents(
+                        confirmButton,
+                        cancelButton
+                    );
+
+
+            return interaction.reply({
+
+                content:
+                    '🔒 **Tem certeza que deseja fechar este ticket?**',
+
+                components: [
+                    row
+                ],
+
+                ephemeral: true
+
+            });
+        }
+
+
+// ======================================================
+// ❌ CANCELAR FECHAMENTO
+// ======================================================
+
+        if (
+            interaction.isButton() &&
+            interaction.customId ===
+            'ticket_close_cancel'
+        ) {
+
+            return interaction.update({
+
+                content:
+                    '✅ Fechamento cancelado.',
+
+                components: []
+
+            });
+        }
+
+
+// ======================================================
+// ✅ CONFIRMAR FECHAMENTO
+// ======================================================
+
+        if (
+            interaction.isButton() &&
+            interaction.customId ===
+            'ticket_close_confirm'
+        ) {
+
+            const ownerId =
+                interaction.channel.topic
+                    ?.match(
+                        /ticket-owner:(\d+)/
+                    )?.[1];
+
+
+            if (
+                interaction.user.id !== ownerId &&
+                !isStaff(interaction.member)
+            ) {
+
+                return interaction.reply({
+
+                    content:
+                        '❌ Você não possui permissão para fechar este ticket.',
+
+                    ephemeral: true
+
+                });
+            }
+
+
+// ======================================================
+// 📩 AVISAR PLAYER
+// ======================================================
+
+            if (ownerId) {
+
+                try {
+
+                    const ticketOwner =
+                        await client.users.fetch(
+                            ownerId
                         );
 
 
-                const permissions = [
+                    await ticketOwner.send(
+`# 🔒 TICKET FINALIZADO
 
-                    {
+Seu atendimento no **Aster** foi encerrado.
 
-                        id:
-                            interaction.guild
-                                .roles
-                                .everyone
-                                .id,
+👮 **Fechado por:** ${interaction.user}
 
-                        deny: [
+🎫 **Ticket:** #${interaction.channel.name}
 
-                            PermissionFlagsBits.ViewChannel
+🔴 **Status:** FECHADO
 
-                        ]
+Caso precise novamente, você poderá abrir um novo ticket em nossa Central de Suporte.
 
-                    },
+Obrigado por utilizar nosso suporte!
 
-                    {
+> ⭐ Aster • Support System`
+                    );
 
-                        id:
-                            interaction.user.id,
-
-                        allow: [
-
-                            PermissionFlagsBits.ViewChannel,
-
-                            PermissionFlagsBits.SendMessages,
-
-                            PermissionFlagsBits.ReadMessageHistory,
-
-                            PermissionFlagsBits.AttachFiles,
-
-                            PermissionFlagsBits.EmbedLinks
-
-                        ]
-
-                    },
-
-                    {
-
-                        id:
-                            client.user.id,
-
-                        allow: [
-
-                            PermissionFlagsBits.ViewChannel,
-
-                            PermissionFlagsBits.SendMessages,
-
-                            PermissionFlagsBits.ManageChannels,
-
-                            PermissionFlagsBits.ReadMessageHistory
-
-                        ]
-
-                    }
-
-                ];
+                } catch {}
+            }
 
 
-                staffRoles.forEach(
-                    role => {
+            await interaction.update({
 
-                        permissions.push({
+                content:
+`# 🔒 TICKET FINALIZADO
 
-                            id:
-                                role.id,
+👮 Fechado por ${interaction.user}
 
-                            allow: [
+⏳ Este canal será apagado em **5 segundos**.`,
 
-                                PermissionFlagsBits.ViewChannel,
+                components: []
 
-                                PermissionFlagsBits.SendMessages,
+            });
 
-                                PermissionFlagsBits.ReadMessageHistory,
 
-                                PermissionFlagsBits.AttachFiles
+            setTimeout(
+                async () => {
 
+                    await interaction.channel
+                        .delete(
+                            `Ticket fechado por ${interaction.user.tag}`
+                        )
+                        .catch(() => {});
+
+                },
+                5000
+            );
+
+
+            return;
+        }
+
+
+// ======================================================
+// 📝 INICIAR CANDIDATURA
+// ======================================================
+
+        if (
+            interaction.isButton() &&
+            interaction.customId ===
+            'aster_apply'
+        ) {
+
+            const user =
+                interaction.user;
+
+
+            if (
+                applicationsInProgress.has(
+                    user.id
+                )
+            ) {
+
+                return interaction.reply({
+
+                    content:
+                        '⚠️ Você já está preenchendo uma candidatura.',
+
+                    ephemeral: true
+
+                });
+            }
+
+
+            let dm;
+
+
+            try {
+
+                dm =
+                    await user.createDM();
+
+
+                await dm.send(
+`# ⭐ RECRUTAMENTO ASTER
+
+Olá ${user}!
+
+Bem-vindo ao processo de recrutamento da equipe **Aster**.
+
+Vou fazer algumas perguntas para você.
+
+Responda uma por uma com calma e sinceridade.
+
+> Digite **cancelar** a qualquer momento para cancelar sua candidatura.
+
+Boa sorte! ⚔️`
+                );
+
+            } catch {
+
+                return interaction.reply({
+
+                    content:
+                        '❌ Não consegui enviar uma DM. Ative suas mensagens privadas e tente novamente.',
+
+                    ephemeral: true
+
+                });
+            }
+
+
+            await interaction.reply({
+
+                content:
+                    '📩 Te enviei uma mensagem privada! Continue sua candidatura pela DM.',
+
+                ephemeral: true
+
+            });
+
+
+            applicationsInProgress.add(
+                user.id
+            );
+
+
+            const questions = [
+
+                '🎮 **1/7 — Qual é o seu nick no Minecraft?**',
+
+                '🎂 **2/7 — Qual é a sua idade?**',
+
+`🛡️ **3/7 — Para qual cargo você está se candidatando?**
+
+• Staff
+• Admin
+• Moderador
+• Builder
+• Developer`,
+
+`📋 **4/7 — Você já teve experiência como Staff anteriormente?**
+
+Se sim, diga em quais servidores e quais cargos você já ocupou.`,
+
+`⏰ **5/7 — Quanto tempo você consegue ficar ativo no Aster?**
+
+Exemplos:
+• 2 horas por dia
+• 4 horas por dia
+• Apenas finais de semana`,
+
+                '🤝 **6/7 — Por que você quer entrar para a equipe do Aster?**',
+
+                '⭐ **7/7 — Por que deveríamos escolher você para fazer parte da equipe?**'
+
+            ];
+
+
+            const answers = [];
+
+
+            try {
+
+                for (
+                    const question
+                    of questions
+                ) {
+
+                    await dm.send(
+                        question
+                    );
+
+
+                    const collected =
+                        await dm.awaitMessages({
+
+                            filter:
+                                message =>
+                                    message.author.id ===
+                                    user.id,
+
+                            max: 1,
+
+                            time:
+                                5 * 60 * 1000,
+
+                            errors: [
+                                'time'
                             ]
 
                         });
 
+
+                    const answer =
+                        collected
+                            .first()
+                            .content
+                            .trim();
+
+
+                    if (
+                        answer.toLowerCase() ===
+                            'cancel' ||
+
+                        answer.toLowerCase() ===
+                            'cancelar'
+                    ) {
+
+                        await dm.send(
+                            '❌ Sua candidatura foi cancelada.'
+                        );
+
+
+                        applicationsInProgress.delete(
+                            user.id
+                        );
+
+
+                        return;
+                    }
+
+
+                    answers.push(
+                        answer
+                    );
+
+
+                    await dm.send(
+                        '✅ **Resposta salva!**'
+                    );
+                }
+
+
+// ======================================================
+// 💾 SALVAR CANDIDATURA
+// ======================================================
+
+                applications.set(
+                    user.id,
+                    {
+
+                        minecraftNick:
+                            answers[0],
+
+                        age:
+                            answers[1],
+
+                        position:
+                            answers[2],
+
+                        experience:
+                            answers[3],
+
+                        availability:
+                            answers[4],
+
+                        reason:
+                            answers[5],
+
+                        whyChoose:
+                            answers[6]
+
                     }
                 );
 
 
-                const safeName =
-                    interaction.user.username
-
-                        .toLowerCase()
-
-                        .replace(
-                            /[^a-z0-9]/g,
-                            ''
-                        )
-
-                        .slice(
-                            0,
-                            20
-                        );
+                const reviewChannel =
+                    await client.channels.fetch(
+                        APPLICATION_REVIEW_CHANNEL_ID
+                    );
 
 
-                const ticketChannel =
-                    await interaction.guild
-                        .channels
-                        .create({
-
-                            name:
-                                `ticket-${safeName}`,
-
-                            type:
-                                ChannelType.GuildText,
-
-                            parent:
-                                category.id,
-
-                            topic:
-                                `ticket-owner:${interaction.user.id}|type:${type}`,
-
-                            permissionOverwrites:
-                                permissions
-
-                        });
+                const skinHead =
+                    `https://mc-heads.net/avatar/${encodeURIComponent(answers[0])}/128`;
 
 
-                ticketSelections.delete(
-                    interaction.user.id
-                );
-
-
-                const typeNames = {
-
-                    support:
-                        '🎫 Support',
-
-                    ajuda:
-                        '🆘 Ajuda',
-
-                    duvida:
-                        '❓ Dúvida'
-
-                };
-
-
-                const claimButton =
+                const acceptButton =
                     new ButtonBuilder()
 
                         .setCustomId(
-                            'ticket_claim'
+                            `application_accept_${user.id}`
                         )
 
                         .setLabel(
-                            'Assumir Ticket'
+                            'Aceitar'
                         )
 
-                        .setEmoji(
-                            '🛡️'
-                        )
+                        .setEmoji('✅')
 
                         .setStyle(
                             ButtonStyle.Success
                         );
 
 
-                const closeButton =
+                const rejectButton =
                     new ButtonBuilder()
 
                         .setCustomId(
-                            'ticket_close'
+                            `application_reject_${user.id}`
                         )
 
                         .setLabel(
-                            'Fechar Ticket'
+                            'Rejeitar'
                         )
 
-                        .setEmoji(
-                            '🔒'
-                        )
+                        .setEmoji('❌')
 
                         .setStyle(
                             ButtonStyle.Danger
@@ -2512,824 +2924,16 @@ Você recebeu um mute no **HushPvP**.
                     new ActionRowBuilder()
 
                         .addComponents(
-                            claimButton,
-                            closeButton
+                            acceptButton,
+                            rejectButton
                         );
 
 
-                const container =
+                const applicationContainer =
                     new ContainerBuilder()
 
                         .setAccentColor(
-                            0x009DFF
-                        )
-
-                        .addTextDisplayComponents(
-
-                            new TextDisplayBuilder()
-                                .setContent(
-`# 🐺 HUSHPVP • TICKET
-
-## ${typeNames[type] || '🎫 Support'}
-
-👤 **Criado por:** ${interaction.user}
-
-📌 **Assunto:** ${subject}
-
-### 📝 Descrição
-${description}
-
-### 📊 Status
-🟢 **ABERTO**
-
-Nossa equipe responderá assim que possível.
-
-> 🐺 HushPvP • Support System`
-                                )
-
-                        )
-
-                        .addActionRowComponents(
-                            buttons
-                        );
-
-
-                await ticketChannel.send({
-
-                    content:
-                        `${interaction.user}`,
-
-                    components: [
-                        container
-                    ],
-
-                    flags:
-                        MessageFlags.IsComponentsV2
-
-                });
-
-
-                return interaction.editReply({
-
-                    content:
-                        `✅ Ticket criado com sucesso: ${ticketChannel}`
-
-                });
-
-            }
-
-
-// ======================================================
-// 🛡️ ASSUMIR TICKET
-// ======================================================
-
-            if (
-                interaction.isButton() &&
-                interaction.customId ===
-                'ticket_claim'
-            ) {
-
-                if (
-                    !isStaff(
-                        interaction.member
-                    )
-                ) {
-
-                    return interaction.reply({
-
-                        content:
-                            '❌ Apenas membros da equipe podem assumir tickets.',
-
-                        ephemeral:
-                            true
-
-                    });
-
-                }
-
-
-                return interaction.reply({
-
-                    content:
-`# 🛡️ TICKET ASSUMIDO
-
-Este atendimento foi assumido por ${interaction.user}.
-
-👤 Agora aguarde o atendimento da equipe.
-
-> 🐺 HushPvP • Support`
-
-                });
-
-            }
-
-
-// ======================================================
-// 🔒 FECHAR TICKET
-// ======================================================
-
-            if (
-                interaction.isButton() &&
-                interaction.customId ===
-                'ticket_close'
-            ) {
-
-                const ownerId =
-                    interaction.channel.topic
-                        ?.match(
-                            /ticket-owner:(\d+)/
-                        )?.[1];
-
-
-                if (
-                    interaction.user.id !==
-                        ownerId &&
-
-                    !isStaff(
-                        interaction.member
-                    )
-                ) {
-
-                    return interaction.reply({
-
-                        content:
-                            '❌ Apenas o dono do ticket ou a Staff pode fechar este ticket.',
-
-                        ephemeral:
-                            true
-
-                    });
-
-                }
-
-
-                const confirm =
-                    new ButtonBuilder()
-
-                        .setCustomId(
-                            'ticket_close_confirm'
-                        )
-
-                        .setLabel(
-                            'Confirmar fechamento'
-                        )
-
-                        .setEmoji(
-                            '✅'
-                        )
-
-                        .setStyle(
-                            ButtonStyle.Danger
-                        );
-
-
-                const cancel =
-                    new ButtonBuilder()
-
-                        .setCustomId(
-                            'ticket_close_cancel'
-                        )
-
-                        .setLabel(
-                            'Cancelar'
-                        )
-
-                        .setStyle(
-                            ButtonStyle.Secondary
-                        );
-
-
-                const row =
-                    new ActionRowBuilder()
-
-                        .addComponents(
-                            confirm,
-                            cancel
-                        );
-
-
-                return interaction.reply({
-
-                    content:
-                        '🔒 **Tem certeza que deseja fechar este ticket?**',
-
-                    components: [
-                        row
-                    ],
-
-                    ephemeral:
-                        true
-
-                });
-
-            }
-
-
-// ======================================================
-// ❌ CANCELAR FECHAMENTO
-// ======================================================
-
-            if (
-                interaction.isButton() &&
-                interaction.customId ===
-                'ticket_close_cancel'
-            ) {
-
-                return interaction.update({
-
-                    content:
-                        '✅ Fechamento cancelado.',
-
-                    components:
-                        []
-
-                });
-
-            }
-
-
-// ======================================================
-// ✅ CONFIRMAR FECHAMENTO
-// ======================================================
-
-            if (
-                interaction.isButton() &&
-                interaction.customId ===
-                'ticket_close_confirm'
-            ) {
-
-                const ownerId =
-                    interaction.channel.topic
-                        ?.match(
-                            /ticket-owner:(\d+)/
-                        )?.[1];
-
-
-                if (
-                    interaction.user.id !==
-                        ownerId &&
-
-                    !isStaff(
-                        interaction.member
-                    )
-                ) {
-
-                    return interaction.reply({
-
-                        content:
-                            '❌ Sem permissão.',
-
-                        ephemeral:
-                            true
-
-                    });
-
-                }
-
-
-                await interaction.update({
-
-                    content:
-                        `🔒 Ticket fechado por ${interaction.user}.\n\nEste canal será apagado em **5 segundos**.`,
-
-                    components:
-                        []
-
-                });
-
-
-                setTimeout(
-                    async () => {
-
-                        await interaction.channel
-                            .delete(
-                                `Ticket fechado por ${interaction.user.tag}`
-                            )
-                            .catch(
-                                () => {}
-                            );
-
-                    },
-                    5000
-                );
-
-
-                return;
-
-            }
-
-
-// ======================================================
-// 📝 RECRUTAMENTO
-// ======================================================
-
-            if (
-                interaction.isButton() &&
-                interaction.customId ===
-                'hushpvp_apply'
-            ) {
-
-                const user =
-                    interaction.user;
-
-
-                if (
-                    applicationsInProgress.has(
-                        user.id
-                    )
-                ) {
-
-                    return interaction.reply({
-
-                        content:
-                            '⚠️ Você já está preenchendo uma candidatura.',
-
-                        ephemeral:
-                            true
-
-                    });
-
-                }
-
-
-                let dm;
-
-
-                try {
-
-                    dm =
-                        await user.createDM();
-
-
-                    await dm.send(
-`# 🐺 RECRUTAMENTO HUSHPVP
-
-Olá ${user}!
-
-Vou fazer algumas perguntas.
-
-Responda uma de cada vez.
-
-Digite **cancelar** para encerrar.
-
-Boa sorte! ⚔️`
-                    );
-
-                } catch {
-
-                    return interaction.reply({
-
-                        content:
-                            '❌ Ative suas mensagens privadas.',
-
-                        ephemeral:
-                            true
-
-                    });
-
-                }
-
-
-                await interaction.reply({
-
-                    content:
-                        '📩 Te enviei uma DM!',
-
-                    ephemeral:
-                        true
-
-                });
-
-
-                applicationsInProgress.add(
-                    user.id
-                );
-
-
-                const questions = [
-
-                    '🎮 **1/7 — Qual é seu nick no Minecraft?**',
-
-                    '🎂 **2/7 — Qual é sua idade?**',
-
-                    `🛡️ **3/7 — Qual cargo deseja?**
-
-• Staff
-• Admin
-• Moderador
-• Builder
-• Developer`,
-
-                    '📋 **4/7 — Já teve experiência como Staff?**',
-
-                    '⏰ **5/7 — Quanto tempo consegue ficar ativo?**',
-
-                    '🤝 **6/7 — Por que quer entrar na equipe?**',
-
-                    '⭐ **7/7 — Por que devemos escolher você?**'
-
-                ];
-
-
-                const answers = [];
-
-
-                try {
-
-                    for (
-                        const question
-                        of questions
-                    ) {
-
-                        await dm.send(
-                            question
-                        );
-
-
-                        const collected =
-                            await dm.awaitMessages({
-
-                                filter:
-                                    m =>
-                                        m.author.id ===
-                                        user.id,
-
-                                max:
-                                    1,
-
-                                time:
-                                    300000,
-
-                                errors:
-                                    ['time']
-
-                            });
-
-
-                        const answer =
-                            collected
-                                .first()
-                                .content
-                                .trim();
-
-
-                        if (
-                            [
-                                'cancel',
-                                'cancelar'
-                            ].includes(
-                                answer.toLowerCase()
-                            )
-                        ) {
-
-                            await dm.send(
-                                '❌ Candidatura cancelada.'
-                            );
-
-
-                            applicationsInProgress.delete(
-                                user.id
-                            );
-
-
-                            return;
-
-                        }
-
-
-                        answers.push(
-                            answer
-                        );
-
-
-                        await dm.send(
-                            '✅ Resposta salva!'
-                        );
-
-                    }
-
-
-                    applications.set(
-                        user.id,
-                        {
-
-                            minecraftNick:
-                                answers[0],
-
-                            age:
-                                answers[1],
-
-                            position:
-                                answers[2],
-
-                            experience:
-                                answers[3],
-
-                            availability:
-                                answers[4],
-
-                            reason:
-                                answers[5],
-
-                            whyChoose:
-                                answers[6]
-
-                        }
-                    );
-
-
-                    const reviewChannel =
-                        await client.channels.fetch(
-                            APPLICATION_REVIEW_CHANNEL_ID
-                        );
-
-
-                    const skinHead =
-                        `https://mc-heads.net/avatar/${encodeURIComponent(answers[0])}/128`;
-
-
-                    const accept =
-                        new ButtonBuilder()
-
-                            .setCustomId(
-                                `application_accept_${user.id}`
-                            )
-
-                            .setLabel(
-                                'Aceitar'
-                            )
-
-                            .setEmoji(
-                                '✅'
-                            )
-
-                            .setStyle(
-                                ButtonStyle.Success
-                            );
-
-
-                    const reject =
-                        new ButtonBuilder()
-
-                            .setCustomId(
-                                `application_reject_${user.id}`
-                            )
-
-                            .setLabel(
-                                'Rejeitar'
-                            )
-
-                            .setEmoji(
-                                '❌'
-                            )
-
-                            .setStyle(
-                                ButtonStyle.Danger
-                            );
-
-
-                    const buttons =
-                        new ActionRowBuilder()
-
-                            .addComponents(
-                                accept,
-                                reject
-                            );
-
-
-                    const container =
-                        new ContainerBuilder()
-
-                            .setAccentColor(
-                                0x009DFF
-                            )
-
-                            .addMediaGalleryComponents(
-
-                                new MediaGalleryBuilder()
-                                    .addItems(
-
-                                        new MediaGalleryItemBuilder()
-                                            .setURL(
-                                                skinHead
-                                            )
-
-                                    )
-
-                            )
-
-                            .addTextDisplayComponents(
-
-                                new TextDisplayBuilder()
-                                    .setContent(
-`# 📋 NOVA CANDIDATURA
-
-👤 ${user}
-
-🎮 **Minecraft:** ${answers[0]}
-🎂 **Idade:** ${answers[1]}
-🛡️ **Cargo:** ${answers[2]}
-
-## Experiência
-${answers[3]}
-
-## Disponibilidade
-${answers[4]}
-
-## Por que quer entrar?
-${answers[5]}
-
-## Por que devemos escolher você?
-${answers[6]}
-
-> 🐺 HushPvP • Recruitment`
-                                    )
-
-                            )
-
-                            .addActionRowComponents(
-                                buttons
-                            );
-
-
-                    await reviewChannel.send({
-
-                        components: [
-                            container
-                        ],
-
-                        flags:
-                            MessageFlags.IsComponentsV2
-
-                    });
-
-
-                    await dm.send(
-                        '✅ Sua candidatura foi enviada para análise!'
-                    );
-
-                } catch {
-
-                    try {
-
-                        await dm.send(
-                            '⏰ Candidatura encerrada por tempo.'
-                        );
-
-                    } catch {}
-
-                }
-
-
-                applicationsInProgress.delete(
-                    user.id
-                );
-
-
-                return;
-
-            }
-
-
-// ======================================================
-// ✅ ACEITAR / ❌ REJEITAR CANDIDATURA
-// ======================================================
-
-            if (
-                interaction.isButton() &&
-
-                (
-                    interaction.customId.startsWith(
-                        'application_accept_'
-                    ) ||
-
-                    interaction.customId.startsWith(
-                        'application_reject_'
-                    )
-                )
-            ) {
-
-                if (
-                    !isAdmin(
-                        interaction.member
-                    )
-                ) {
-
-                    return interaction.reply({
-
-                        content:
-                            '❌ Apenas Owner/Admin.',
-
-                        ephemeral:
-                            true
-
-                    });
-
-                }
-
-
-                const accepted =
-                    interaction.customId
-                        .startsWith(
-                            'application_accept_'
-                        );
-
-
-                const userId =
-                    interaction.customId
-
-                        .replace(
-                            'application_accept_',
-                            ''
-                        )
-
-                        .replace(
-                            'application_reject_',
-                            ''
-                        );
-
-
-                const application =
-                    applications.get(
-                        userId
-                    );
-
-
-                if (
-                    !application
-                ) {
-
-                    return interaction.reply({
-
-                        content:
-                            '❌ Dados não encontrados. O bot pode ter reiniciado.',
-
-                        ephemeral:
-                            true
-
-                    });
-
-                }
-
-
-                const candidate =
-                    await client.users.fetch(
-                        userId
-                    );
-
-
-                const skinHead =
-                    `https://mc-heads.net/avatar/${encodeURIComponent(application.minecraftNick)}/128`;
-
-
-                const logChannel =
-                    await client.channels.fetch(
-                        REVIEW_LOG_CHANNEL_ID
-                    );
-
-
-                try {
-
-                    await candidate.send(
-
-                        accepted
-
-                            ? `# 🎉 CANDIDATURA ACEITA!
-
-Sua candidatura para o **HushPvP** foi aceita! ✅
-
-🎮 **Nick:** ${application.minecraftNick}
-
-🛡️ **Cargo:** ${application.position}
-
-Um administrador entrará em contato.
-
-> 🐺 HushPvP`
-
-                            : `# ❌ CANDIDATURA REJEITADA
-
-Obrigado pelo interesse no **HushPvP**.
-
-Sua candidatura não foi aprovada desta vez.
-
-Você poderá tentar novamente futuramente.
-
-> 🐺 HushPvP`
-
-                    );
-
-                } catch {}
-
-
-                const result =
-                    new ContainerBuilder()
-
-                        .setAccentColor(
-
-                            accepted
-                                ? 0x00FF7F
-                                : 0xFF0000
-
+                            0x7B2EFF
                         )
 
                         .addMediaGalleryComponents(
@@ -3348,8 +2952,271 @@ Você poderá tentar novamente futuramente.
 
                         .addTextDisplayComponents(
 
-                            new TextDisplayBuilder()
-                                .setContent(
+                            new TextDisplayBuilder().setContent(
+`# 📋 NOVA CANDIDATURA ASTER
+
+## 👤 CANDIDATO
+
+${user}
+
+**Discord:** ${user.tag}
+
+**ID:** \`${user.id}\`
+
+## 🎮 NICK NO MINECRAFT
+
+${answers[0]}
+
+## 🎂 IDADE
+
+${answers[1]}
+
+## 🛡️ CARGO DESEJADO
+
+${answers[2]}
+
+## 📋 EXPERIÊNCIA ANTERIOR
+
+${answers[3]}
+
+## ⏰ DISPONIBILIDADE
+
+${answers[4]}
+
+## 🤝 POR QUE QUER ENTRAR NO ASTER?
+
+${answers[5]}
+
+## ⭐ POR QUE DEVEMOS ESCOLHER VOCÊ?
+
+${answers[6]}
+
+> ⭐ Aster • Sistema de Recrutamento`
+                            )
+
+                        )
+
+                        .addActionRowComponents(
+                            buttons
+                        );
+
+
+                await reviewChannel.send({
+
+                    components: [
+                        applicationContainer
+                    ],
+
+                    flags:
+                        MessageFlags.IsComponentsV2
+
+                });
+
+
+                await dm.send(
+`# ✅ CANDIDATURA ENVIADA!
+
+Sua candidatura foi enviada para a administração do **Aster**.
+
+Agora é só aguardar nossa análise.
+
+Você receberá o resultado pela sua DM.
+
+> ⭐ Aster • Recrutamento`
+                );
+
+
+            } catch {
+
+                try {
+
+                    await dm.send(
+`# ⏰ CANDIDATURA ENCERRADA
+
+O tempo para responder terminou.
+
+Caso queira tentar novamente, volte ao painel de recrutamento do **Aster**.
+
+> ⭐ Aster • Recrutamento`
+                    );
+
+                } catch {}
+            }
+
+
+            applicationsInProgress.delete(
+                user.id
+            );
+
+
+            return;
+        }
+
+
+// ======================================================
+// ✅ ACEITAR / ❌ REJEITAR CANDIDATURA
+// ======================================================
+
+        if (
+            interaction.isButton() &&
+
+            (
+                interaction.customId.startsWith(
+                    'application_accept_'
+                ) ||
+
+                interaction.customId.startsWith(
+                    'application_reject_'
+                )
+            )
+        ) {
+
+            if (
+                !isAdmin(
+                    interaction.member
+                )
+            ) {
+
+                return interaction.reply({
+
+                    content:
+                        '❌ Apenas Owner/Admin pode analisar candidaturas.',
+
+                    ephemeral: true
+
+                });
+            }
+
+
+            const accepted =
+                interaction.customId.startsWith(
+                    'application_accept_'
+                );
+
+
+            const userId =
+                interaction.customId
+
+                    .replace(
+                        'application_accept_',
+                        ''
+                    )
+
+                    .replace(
+                        'application_reject_',
+                        ''
+                    );
+
+
+            const application =
+                applications.get(
+                    userId
+                );
+
+
+            if (!application) {
+
+                return interaction.reply({
+
+                    content:
+                        '❌ Não encontrei os dados dessa candidatura. Talvez o bot tenha reiniciado.',
+
+                    ephemeral: true
+
+                });
+            }
+
+
+            const candidate =
+                await client.users.fetch(
+                    userId
+                );
+
+
+            const skinHead =
+                `https://mc-heads.net/avatar/${encodeURIComponent(application.minecraftNick)}/128`;
+
+
+// ======================================================
+// 📩 RESULTADO NA DM
+// ======================================================
+
+            try {
+
+                if (accepted) {
+
+                    await candidate.send(
+`# 🎉 CANDIDATURA ACEITA!
+
+Parabéns ${candidate}!
+
+Sua candidatura para entrar na equipe do **Aster** foi **ACEITA**. ✅
+
+🎮 **Nick:** ${application.minecraftNick}
+
+🛡️ **Cargo:** ${application.position}
+
+Um administrador entrará em contato com você.
+
+Bem-vindo à equipe! ⭐⚔️
+
+> Aster • Recrutamento`
+                    );
+
+                } else {
+
+                    await candidate.send(
+`# ❌ RESULTADO DA CANDIDATURA
+
+Olá ${candidate}.
+
+Obrigado pelo interesse em fazer parte da equipe do **Aster**.
+
+Após analisarmos sua candidatura, infelizmente ela **não foi aprovada desta vez**.
+
+🎮 **Nick:** ${application.minecraftNick}
+
+🛡️ **Cargo:** ${application.position}
+
+Você poderá tentar novamente em outra oportunidade.
+
+> ⭐ Aster • Recrutamento`
+                    );
+                }
+
+            } catch {}
+
+
+// ======================================================
+// 📋 RESULTADO
+// ======================================================
+
+            const resultContainer =
+                new ContainerBuilder()
+
+                    .setAccentColor(
+                        accepted
+                            ? 0x00FF7F
+                            : 0xFF0000
+                    )
+
+                    .addMediaGalleryComponents(
+
+                        new MediaGalleryBuilder()
+                            .addItems(
+
+                                new MediaGalleryItemBuilder()
+                                    .setURL(
+                                        skinHead
+                                    )
+
+                            )
+
+                    )
+
+                    .addTextDisplayComponents(
+
+                        new TextDisplayBuilder().setContent(
 `# ${accepted ? '✅ CANDIDATURA ACEITA' : '❌ CANDIDATURA REJEITADA'}
 
 👤 **Candidato:** ${candidate}
@@ -3362,21 +3229,33 @@ Você poderá tentar novamente futuramente.
 
 👮 **Analisado por:** ${interaction.user}
 
-📋 **Status:** ${accepted ? 'APROVADO' : 'REJEITADO'}
+📋 **Resultado:** ${accepted ? 'APROVADO' : 'REJEITADO'}
 
-> 🐺 HushPvP • Reviews`
-                                )
+> ⭐ Aster • Recruitment Reviews`
+                        )
 
-                        );
+                    );
 
 
-                await interaction.update({
+            await interaction.update({
 
-                    components: [
-                        result
-                    ]
+                components: [
+                    resultContainer
+                ]
 
-                });
+            });
+
+
+// ======================================================
+// 📋 LOG FINAL
+// ======================================================
+
+            try {
+
+                const logChannel =
+                    await client.channels.fetch(
+                        REVIEW_LOG_CHANNEL_ID
+                    );
 
 
                 if (
@@ -3384,70 +3263,131 @@ Você poderá tentar novamente futuramente.
                     logChannel.isTextBased()
                 ) {
 
+                    const logContainer =
+                        new ContainerBuilder()
+
+                            .setAccentColor(
+                                accepted
+                                    ? 0x00FF7F
+                                    : 0xFF0000
+                            )
+
+                            .addMediaGalleryComponents(
+
+                                new MediaGalleryBuilder()
+                                    .addItems(
+
+                                        new MediaGalleryItemBuilder()
+                                            .setURL(
+                                                skinHead
+                                            )
+
+                                    )
+
+                            )
+
+                            .addTextDisplayComponents(
+
+                                new TextDisplayBuilder().setContent(
+`# 📋 RESULTADO DO RECRUTAMENTO
+
+👤 **Candidato:** ${candidate}
+
+🎮 **Minecraft:** ${application.minecraftNick}
+
+🎂 **Idade:** ${application.age}
+
+🛡️ **Cargo desejado:** ${application.position}
+
+👮 **Administrador:** ${interaction.user}
+
+${accepted
+    ? '✅ **RESULTADO: APROVADO**'
+    : '❌ **RESULTADO: REJEITADO**'}
+
+> ⭐ Aster • Recruitment Logs`
+                                )
+
+                            );
+
+
                     await logChannel.send({
 
                         components: [
-                            result
+                            logContainer
                         ],
 
                         flags:
                             MessageFlags.IsComponentsV2
 
                     });
-
                 }
 
+            } catch (error) {
 
-                applications.delete(
-                    userId
+                console.error(
+                    '❌ Erro no log da candidatura:',
+                    error
                 );
-
             }
 
-        } catch (error) {
 
-            console.error(
-                '❌ ERRO DE INTERAÇÃO:',
-                error
+            applications.delete(
+                userId
             );
 
 
-            if (
-                interaction.isRepliable() &&
-                !interaction.replied &&
-                !interaction.deferred
-            ) {
-
-                await interaction.reply({
-
-                    content:
-                        '❌ Ocorreu um erro no sistema.',
-
-                    ephemeral:
-                        true
-
-                }).catch(
-                    () => {}
-                );
-
-            }
-
+            return;
         }
 
+
+    } catch (error) {
+
+        console.error(
+            '❌ ERRO DE INTERAÇÃO:',
+            error
+        );
+
+
+        if (
+            interaction.isRepliable() &&
+            !interaction.replied &&
+            !interaction.deferred
+        ) {
+
+            await interaction.reply({
+
+                content:
+                    '❌ Ocorreu um erro no sistema do Aster.',
+
+                ephemeral: true
+
+            }).catch(() => {});
+        }
     }
-);
+});
 
 
 // ======================================================
 // ❌ ERROS
 // ======================================================
 
-client.on(
-    'error',
+client.on('error', error => {
+
+    console.error(
+        '❌ Discord:',
+        error
+    );
+
+});
+
+
+process.on(
+    'unhandledRejection',
     error => {
 
         console.error(
-            '❌ Discord:',
+            '❌ Promise não tratada:',
             error
         );
 
