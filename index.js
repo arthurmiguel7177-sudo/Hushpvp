@@ -752,7 +752,11 @@ async function sendDownloadPanel() {
         );
 
         if (!channel || !channel.isTextBased()) {
-            console.log('❌ Canal de download inválido.');
+
+            console.log(
+                '❌ Canal de download inválido.'
+            );
+
             return;
         }
 
@@ -776,46 +780,114 @@ async function sendDownloadPanel() {
         } catch {}
 
 
+        // ==================================================
+        // 🖼️ BANNER DOWNLOAD
+        // ==================================================
+
+        const banner = new AttachmentBuilder(
+            './down_png.png',
+            {
+                name: 'down_png.png'
+            }
+        );
+
+
+        // ==================================================
+        // 📥 BOTÃO DOWNLOAD
+        // ==================================================
+
         const downloadButton = new ButtonBuilder()
-            .setLabel('Baixar Aster Client')
-            .setEmoji('📥')
-            .setStyle(ButtonStyle.Link)
-            .setURL(DOWNLOAD_URL);
 
-
-        const row = new ActionRowBuilder()
-            .addComponents(downloadButton);
-
-
-        const container = new ContainerBuilder()
-
-            .setAccentColor(0x7B2EFF)
-
-            .addTextDisplayComponents(
-
-                new TextDisplayBuilder().setContent(
-`# 📥 ASTER CLIENT • DOWNLOAD
-
-## ⭐ BAIXE O CLIENT OFICIAL
-
-Faça o download do **Aster Client** pelo botão abaixo.
-
-💻 **Plataforma:** Windows
-📦 **Arquivo:** AsterClient-Instalador-Oficial.zip
-
-⚠️ Utilize sempre o link oficial disponibilizado pelo Aster.
-
-> ⭐ Aster • Download Oficial`
-                )
-
+            .setLabel(
+                'Baixar Aster Client'
             )
 
-            .addActionRowComponents(row);
+            .setEmoji('📥')
 
+            .setStyle(
+                ButtonStyle.Link
+            )
+
+            .setURL(
+                DOWNLOAD_URL
+            );
+
+
+        const row =
+            new ActionRowBuilder()
+
+                .addComponents(
+                    downloadButton
+                );
+
+
+        // ==================================================
+        // ⭐ COMPONENTS V2
+        // ==================================================
+
+        const container =
+            new ContainerBuilder()
+
+                .setAccentColor(
+                    0x7B2EFF
+                )
+
+                // 🖼️ IMAGEM
+                .addMediaGalleryComponents(
+
+                    new MediaGalleryBuilder()
+                        .addItems(
+
+                            new MediaGalleryItemBuilder()
+                                .setURL(
+                                    'attachment://down_png.png'
+                                )
+
+                        )
+
+                )
+
+                // 📝 TEXTO
+                .addTextDisplayComponents(
+
+                    new TextDisplayBuilder().setContent(
+`# 📥 ASTER CLIENT • DOWNLOAD
+
+## ⭐ DOWNLOAD OFICIAL
+
+Baixe a versão oficial do **Aster Client**.
+
+💻 **Plataforma:** Windows
+
+📦 **Arquivo:** \`AsterClient-Instalador-Oficial.zip\`
+
+⚡ Clique no botão abaixo para acessar o download oficial.
+
+> ⭐ **Aster Client**
+> PvP • Performance • Competitive`
+                    )
+
+                )
+
+                // 📥 BOTÃO
+                .addActionRowComponents(
+                    row
+                );
+
+
+        // ==================================================
+        // 📤 ENVIAR PAINEL
+        // ==================================================
 
         await channel.send({
 
-            components: [container],
+            components: [
+                container
+            ],
+
+            files: [
+                banner
+            ],
 
             flags:
                 MessageFlags.IsComponentsV2
@@ -824,7 +896,7 @@ Faça o download do **Aster Client** pelo botão abaixo.
 
 
         console.log(
-            '📥 Painel de download Aster enviado!'
+            '📥 Painel de download Aster V2 enviado!'
         );
 
     } catch (error) {
