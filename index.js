@@ -46,6 +46,10 @@ const TICKET_PANEL_CHANNEL_ID = '1545956394342289478';
 // PRECISA SER UMA CATEGORIA
 const TICKET_CATEGORY_ID = '1546151207217668166';
 
+// 📥 DOWNLOAD DO ASTER CLIENT
+const DOWNLOAD_CHANNEL_ID = '1546641835773132922';
+const DOWNLOAD_URL = 'https://www.mediafire.com/file/9ex3ssu2qykmvur/AsterClient-Instalador-Oficial.zip/file';
+
 
 // ======================================================
 // 💾 MEMÓRIA TEMPORÁRIA
@@ -734,6 +738,106 @@ async function sendRulesPanel() {
 }
 
 
+
+// ======================================================
+// 📥 PAINEL DE DOWNLOAD
+// ======================================================
+
+async function sendDownloadPanel() {
+
+    try {
+
+        const channel = await client.channels.fetch(
+            DOWNLOAD_CHANNEL_ID
+        );
+
+        if (!channel || !channel.isTextBased()) {
+            console.log('❌ Canal de download inválido.');
+            return;
+        }
+
+
+        // APAGA SOMENTE PAINÉIS ANTIGOS DO PRÓPRIO BOT
+        try {
+
+            const messages = await channel.messages.fetch({
+                limit: 30
+            });
+
+            const botMessages = messages.filter(
+                message =>
+                    message.author.id === client.user.id
+            );
+
+            for (const message of botMessages.values()) {
+                await message.delete().catch(() => {});
+            }
+
+        } catch {}
+
+
+        const downloadButton = new ButtonBuilder()
+            .setLabel('Baixar Aster Client')
+            .setEmoji('📥')
+            .setStyle(ButtonStyle.Link)
+            .setURL(DOWNLOAD_URL);
+
+
+        const row = new ActionRowBuilder()
+            .addComponents(downloadButton);
+
+
+        const container = new ContainerBuilder()
+
+            .setAccentColor(0x7B2EFF)
+
+            .addTextDisplayComponents(
+
+                new TextDisplayBuilder().setContent(
+`# 📥 ASTER CLIENT • DOWNLOAD
+
+## ⭐ BAIXE O CLIENT OFICIAL
+
+Faça o download do **Aster Client** pelo botão abaixo.
+
+💻 **Plataforma:** Windows
+📦 **Arquivo:** AsterClient-Instalador-Oficial.zip
+
+⚠️ Utilize sempre o link oficial disponibilizado pelo Aster.
+
+> ⭐ Aster • Download Oficial`
+                )
+
+            )
+
+            .addActionRowComponents(row);
+
+
+        await channel.send({
+
+            components: [container],
+
+            flags:
+                MessageFlags.IsComponentsV2
+
+        });
+
+
+        console.log(
+            '📥 Painel de download Aster enviado!'
+        );
+
+    } catch (error) {
+
+        console.error(
+            '❌ Erro no painel de download:',
+            error
+        );
+
+    }
+}
+
+
 // ======================================================
 // 🚀 BOT ONLINE
 // ======================================================
@@ -874,6 +978,8 @@ client.once('ready', async () => {
     await sendTicketPanel();
 
     await sendRecruitmentPanel();
+
+    await sendDownloadPanel();
 
 });
 
