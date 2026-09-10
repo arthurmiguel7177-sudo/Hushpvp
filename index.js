@@ -46,7 +46,7 @@ const TICKET_PANEL_CHANNEL_ID = '1545956394342289478';
 // PRECISA SER UMA CATEGORIA
 const TICKET_CATEGORY_ID = '1546151207217668166';
 
-// 📥 DOWNLOAD DO ASTER CLIENT
+// 📥 DOWNLOAD
 const DOWNLOAD_CHANNEL_ID = '1546641835773132922';
 const DOWNLOAD_URL = 'https://www.mediafire.com/file/9ex3ssu2qykmvur/AsterClient-Instalador-Oficial.zip/file';
 
@@ -751,6 +751,7 @@ async function sendDownloadPanel() {
             DOWNLOAD_CHANNEL_ID
         );
 
+
         if (!channel || !channel.isTextBased()) {
 
             console.log(
@@ -780,10 +781,6 @@ async function sendDownloadPanel() {
         } catch {}
 
 
-        // ==================================================
-        // 🖼️ BANNER DOWNLOAD
-        // ==================================================
-
         const banner = new AttachmentBuilder(
             './down_png.png',
             {
@@ -792,14 +789,10 @@ async function sendDownloadPanel() {
         );
 
 
-        // ==================================================
-        // 📥 BOTÃO DOWNLOAD
-        // ==================================================
-
         const downloadButton = new ButtonBuilder()
 
             .setLabel(
-                'Baixar Aster Client'
+                'DOWNLOAD'
             )
 
             .setEmoji('📥')
@@ -813,81 +806,57 @@ async function sendDownloadPanel() {
             );
 
 
-        const row =
-            new ActionRowBuilder()
-
-                .addComponents(
-                    downloadButton
-                );
+        const row = new ActionRowBuilder()
+            .addComponents(
+                downloadButton
+            );
 
 
-        // ==================================================
-        // ⭐ COMPONENTS V2
-        // ==================================================
+        const container = new ContainerBuilder()
 
-        const container =
-            new ContainerBuilder()
+            .setAccentColor(0x7B2EFF)
 
-                .setAccentColor(
-                    0x7B2EFF
-                )
+            .addMediaGalleryComponents(
 
-                // 🖼️ IMAGEM
-                .addMediaGalleryComponents(
+                new MediaGalleryBuilder()
+                    .addItems(
 
-                    new MediaGalleryBuilder()
-                        .addItems(
+                        new MediaGalleryItemBuilder()
+                            .setURL(
+                                'attachment://down_png.png'
+                            )
 
-                            new MediaGalleryItemBuilder()
-                                .setURL(
-                                    'attachment://down_png.png'
-                                )
-
-                        )
-
-                )
-
-                // 📝 TEXTO
-                .addTextDisplayComponents(
-
-                    new TextDisplayBuilder().setContent(
-`# 📥 ASTER CLIENT • DOWNLOAD
-
-## ⭐ DOWNLOAD OFICIAL
-
-Baixe a versão oficial do **Aster Client**.
-
-💻 **Plataforma:** Windows
-
-📦 **Arquivo:** \`AsterClient-Instalador-Oficial.zip\`
-
-⚡ Clique no botão abaixo para acessar o download oficial.
-
-> ⭐ **Aster Client**
-> PvP • Performance • Competitive`
                     )
 
+            )
+
+            .addTextDisplayComponents(
+
+                new TextDisplayBuilder().setContent(
+`# 📥 ASTER CLIENT
+
+> Baixe o **Aster Client** pelo botão abaixo.
+
+💻 **Windows**
+📦 **AsterClient-Instalador-Oficial.zip**
+
+⚠️ Baixe somente pelo link oficial do Aster.
+
+> ⭐ **ASTER CLIENT • DOWNLOAD**`
                 )
 
-                // 📥 BOTÃO
-                .addActionRowComponents(
-                    row
-                );
+            )
 
+            .addActionRowComponents(
+                row
+            );
 
-        // ==================================================
-        // 📤 ENVIAR PAINEL
-        // ==================================================
 
         await channel.send({
 
-            components: [
-                container
-            ],
+            components: [container],
 
-            files: [
-                banner
-            ],
+            files: [banner],
 
             flags:
                 MessageFlags.IsComponentsV2
@@ -896,7 +865,7 @@ Baixe a versão oficial do **Aster Client**.
 
 
         console.log(
-            '📥 Painel de download Aster V2 enviado!'
+            '📥 Download Aster enviado!'
         );
 
     } catch (error) {
