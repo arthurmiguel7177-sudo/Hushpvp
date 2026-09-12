@@ -46,9 +46,9 @@ const TICKET_PANEL_CHANNEL_ID = '1545956394342289478';
 // PRECISA SER UMA CATEGORIA
 const TICKET_CATEGORY_ID = '1546151207217668166';
 
-// 📥 DOWNLOAD
+// 📥 DOWNLOAD ASTER CLIENT
 const DOWNLOAD_CHANNEL_ID = '1546641835773132922';
-const DOWNLOAD_URL = 'https://www.mediafire.com/file/9ex3ssu2qykmvur/AsterClient-Instalador-Oficial.zip/file';
+const DOWNLOAD_URL = 'https://drive.google.com/file/d/1ZzdCSVjl7vjeR37y3dikJoRVQERaLiIS/view?usp=drive_link';
 
 
 // ======================================================
@@ -792,7 +792,7 @@ async function sendDownloadPanel() {
         const downloadButton = new ButtonBuilder()
 
             .setLabel(
-                'DOWNLOAD'
+                'Baixar Aster Client 2.0'
             )
 
             .setEmoji('📥')
@@ -833,16 +833,27 @@ async function sendDownloadPanel() {
             .addTextDisplayComponents(
 
                 new TextDisplayBuilder().setContent(
-`# 📥 ASTER CLIENT
+`# ⭐ Aster Client 2.0 — Download
 
-> Baixe o **Aster Client** pelo botão abaixo.
+**Minecraft Java • Forge 1.8.9**
 
-💻 **Windows**
-📦 **AsterClient-Instalador-Oficial.zip**
+O **Aster Client** é focado em PvP, performance e personalização, trazendo uma experiência mais leve e personalizada para o Minecraft 1.8.9.
 
-⚠️ Baixe somente pelo link oficial do Aster.
+⚡ **Otimizações de performance**
+🎥 **Freelook 360°**
+🧥 **Sistema de Capes**
+🎨 **Interface personalizada Aster**
 
-> ⭐ **ASTER CLIENT • DOWNLOAD**`
+## 📥 DOWNLOAD:
+
+**Baixar Aster Client 2.0 pelo Google Drive:**
+${DOWNLOAD_URL}
+
+## 📌 Como executar:
+
+Baixe e instale o **Aster** → abra o **Minecraft Launcher** → **Java Edition** → use **Forge 1.8.9** → configure o diretório do jogo para \`%APPDATA%\\.asterclient\` → **JOGAR**. 🚀
+
+> ⭐ **ASTER CLIENT — PERFORMANCE • PVP • CUSTOMIZAÇÃO**`
                 )
 
             )
@@ -865,7 +876,7 @@ async function sendDownloadPanel() {
 
 
         console.log(
-            '📥 Download Aster enviado!'
+            '📥 Painel Aster Client 2.0 enviado!'
         );
 
     } catch (error) {
